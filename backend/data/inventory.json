@@ -1,0 +1,616 @@
+{
+ "_note": "FICTIONAL demo data. Offline fallback generated from supabase/seed.sql.",
+ "suppliers": [
+  {
+   "id": "a0000000-0000-4000-8000-000000000001",
+   "name": "Demo Lara Event Hall (fictional)",
+   "city": "Antalya",
+   "latitude": 36.853,
+   "longitude": 30.8
+  },
+  {
+   "id": "a0000000-0000-4000-8000-000000000002",
+   "name": "Demo Konyaalti Hotel Storage (fictional)",
+   "city": "Antalya",
+   "latitude": 36.88,
+   "longitude": 30.64
+  },
+  {
+   "id": "a0000000-0000-4000-8000-000000000003",
+   "name": "Demo Kepez Equipment Depot (fictional)",
+   "city": "Antalya",
+   "latitude": 36.93,
+   "longitude": 30.7
+  },
+  {
+   "id": "a0000000-0000-4000-8000-000000000004",
+   "name": "Demo Belek Resort Warehouse (fictional)",
+   "city": "Serik",
+   "latitude": 36.86,
+   "longitude": 31.05
+  },
+  {
+   "id": "a0000000-0000-4000-8000-000000000005",
+   "name": "Demo Kemer Community Collective (fictional)",
+   "city": "Kemer",
+   "latitude": 36.6,
+   "longitude": 30.56
+  }
+ ],
+ "categories": [
+  {
+   "slug": "tables",
+   "name": "Tables",
+   "unit_label": "table"
+  },
+  {
+   "slug": "chairs",
+   "name": "Chairs",
+   "unit_label": "chair"
+  },
+  {
+   "slug": "lighting",
+   "name": "Lighting",
+   "unit_label": "light"
+  },
+  {
+   "slug": "signage",
+   "name": "Signage",
+   "unit_label": "sign"
+  },
+  {
+   "slug": "staging",
+   "name": "Staging",
+   "unit_label": "platform"
+  }
+ ],
+ "items": [
+  {
+   "id": "b0000000-0000-4000-8000-000000000001",
+   "supplier_id": "a0000000-0000-4000-8000-000000000001",
+   "category": "chairs",
+   "name": "Stackable banquet chairs",
+   "quantity_total": 200,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 12,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 150
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000002",
+   "supplier_id": "a0000000-0000-4000-8000-000000000001",
+   "category": "chairs",
+   "name": "Folding chairs, white",
+   "quantity_total": 120,
+   "condition": "good",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 8,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 120
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000003",
+   "supplier_id": "a0000000-0000-4000-8000-000000000001",
+   "category": "tables",
+   "name": "Round banquet tables, 180 cm",
+   "quantity_total": 24,
+   "condition": "good",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 90,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 20
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000004",
+   "supplier_id": "a0000000-0000-4000-8000-000000000001",
+   "category": "lighting",
+   "name": "LED uplighters (battery)",
+   "quantity_total": 30,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 55,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-22",
+     "quantity_available": 30
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000005",
+   "supplier_id": "a0000000-0000-4000-8000-000000000001",
+   "category": "signage",
+   "name": "Roll-up banners",
+   "quantity_total": 15,
+   "condition": "good",
+   "reuse_mode": "loan",
+   "unit_price_per_day_try": null,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 15
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000006",
+   "supplier_id": "a0000000-0000-4000-8000-000000000001",
+   "category": "staging",
+   "name": "Modular stage decks 1x2 m",
+   "quantity_total": 16,
+   "condition": "fair",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 140,
+   "availability": [
+    {
+     "available_from": "2026-11-21",
+     "available_until": "2026-11-25",
+     "quantity_available": 16
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000007",
+   "supplier_id": "a0000000-0000-4000-8000-000000000002",
+   "category": "chairs",
+   "name": "Conference chairs, upholstered",
+   "quantity_total": 80,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 20,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 60
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000008",
+   "supplier_id": "a0000000-0000-4000-8000-000000000002",
+   "category": "tables",
+   "name": "Cocktail tables",
+   "quantity_total": 30,
+   "condition": "good",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 45,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 30
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000009",
+   "supplier_id": "a0000000-0000-4000-8000-000000000002",
+   "category": "tables",
+   "name": "Boardroom tables",
+   "quantity_total": 10,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 120,
+   "availability": [
+    {
+     "available_from": "2026-11-23",
+     "available_until": "2026-11-25",
+     "quantity_available": 10
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000010",
+   "supplier_id": "a0000000-0000-4000-8000-000000000002",
+   "category": "lighting",
+   "name": "Stage par lights LED",
+   "quantity_total": 24,
+   "condition": "good",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 70,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 24
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000011",
+   "supplier_id": "a0000000-0000-4000-8000-000000000002",
+   "category": "signage",
+   "name": "Directional floor signs",
+   "quantity_total": 40,
+   "condition": "good",
+   "reuse_mode": "loan",
+   "unit_price_per_day_try": null,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 40
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000012",
+   "supplier_id": "a0000000-0000-4000-8000-000000000002",
+   "category": "staging",
+   "name": "Lectern with microphone stand",
+   "quantity_total": 4,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 160,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 0
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000013",
+   "supplier_id": "a0000000-0000-4000-8000-000000000003",
+   "category": "chairs",
+   "name": "Plastic stacking chairs",
+   "quantity_total": 300,
+   "condition": "fair",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 5,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 300
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000014",
+   "supplier_id": "a0000000-0000-4000-8000-000000000003",
+   "category": "chairs",
+   "name": "Bar stools",
+   "quantity_total": 40,
+   "condition": "good",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 18,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 25
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000015",
+   "supplier_id": "a0000000-0000-4000-8000-000000000003",
+   "category": "tables",
+   "name": "Trestle tables 2 m",
+   "quantity_total": 60,
+   "condition": "fair",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 25,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 60
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000016",
+   "supplier_id": "a0000000-0000-4000-8000-000000000003",
+   "category": "lighting",
+   "name": "Moving head spots",
+   "quantity_total": 8,
+   "condition": "good",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 250,
+   "availability": [
+    {
+     "available_from": "2026-11-22",
+     "available_until": "2026-11-25",
+     "quantity_available": 8
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000017",
+   "supplier_id": "a0000000-0000-4000-8000-000000000003",
+   "category": "signage",
+   "name": "A-frame boards",
+   "quantity_total": 25,
+   "condition": "fair",
+   "reuse_mode": "loan",
+   "unit_price_per_day_try": null,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 25
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000018",
+   "supplier_id": "a0000000-0000-4000-8000-000000000003",
+   "category": "staging",
+   "name": "Truss kit 6 m",
+   "quantity_total": 3,
+   "condition": "good",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 400,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 2
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000019",
+   "supplier_id": "a0000000-0000-4000-8000-000000000004",
+   "category": "chairs",
+   "name": "Chiavari chairs, gold",
+   "quantity_total": 150,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 30,
+   "availability": [
+    {
+     "available_from": "2026-11-21",
+     "available_until": "2026-11-24",
+     "quantity_available": 150
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000020",
+   "supplier_id": "a0000000-0000-4000-8000-000000000004",
+   "category": "tables",
+   "name": "Long banquet tables 240 cm",
+   "quantity_total": 20,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 110,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 18
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000021",
+   "supplier_id": "a0000000-0000-4000-8000-000000000004",
+   "category": "lighting",
+   "name": "String festoon lights 20 m",
+   "quantity_total": 12,
+   "condition": "good",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 80,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 12
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000022",
+   "supplier_id": "a0000000-0000-4000-8000-000000000004",
+   "category": "signage",
+   "name": "Illuminated entrance arch",
+   "quantity_total": 2,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 500,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 0
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000023",
+   "supplier_id": "a0000000-0000-4000-8000-000000000004",
+   "category": "staging",
+   "name": "Stage riser 4x3 m with skirt",
+   "quantity_total": 4,
+   "condition": "excellent",
+   "reuse_mode": "rental",
+   "unit_price_per_day_try": 600,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 4
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000024",
+   "supplier_id": "a0000000-0000-4000-8000-000000000004",
+   "category": "chairs",
+   "name": "Lounge armchairs",
+   "quantity_total": 20,
+   "condition": "good",
+   "reuse_mode": "donation",
+   "unit_price_per_day_try": 0,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 20
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000025",
+   "supplier_id": "a0000000-0000-4000-8000-000000000005",
+   "category": "chairs",
+   "name": "Wooden folding chairs",
+   "quantity_total": 70,
+   "condition": "fair",
+   "reuse_mode": "loan",
+   "unit_price_per_day_try": null,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 70
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000026",
+   "supplier_id": "a0000000-0000-4000-8000-000000000005",
+   "category": "tables",
+   "name": "Community picnic tables",
+   "quantity_total": 14,
+   "condition": "fair",
+   "reuse_mode": "loan",
+   "unit_price_per_day_try": null,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 14
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000027",
+   "supplier_id": "a0000000-0000-4000-8000-000000000005",
+   "category": "lighting",
+   "name": "Solar lantern set",
+   "quantity_total": 40,
+   "condition": "good",
+   "reuse_mode": "loan",
+   "unit_price_per_day_try": null,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-22",
+     "quantity_available": 40
+    },
+    {
+     "available_from": "2026-11-23",
+     "available_until": "2026-11-25",
+     "quantity_available": 25
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000028",
+   "supplier_id": "a0000000-0000-4000-8000-000000000005",
+   "category": "signage",
+   "name": "Hand-painted wooden signs",
+   "quantity_total": 18,
+   "condition": "good",
+   "reuse_mode": "donation",
+   "unit_price_per_day_try": 0,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 18
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000029",
+   "supplier_id": "a0000000-0000-4000-8000-000000000005",
+   "category": "staging",
+   "name": "Pallet stage platforms",
+   "quantity_total": 10,
+   "condition": "fair",
+   "reuse_mode": "loan",
+   "unit_price_per_day_try": null,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 10
+    }
+   ]
+  },
+  {
+   "id": "b0000000-0000-4000-8000-000000000030",
+   "supplier_id": "a0000000-0000-4000-8000-000000000005",
+   "category": "tables",
+   "name": "Standing bar tables (resale)",
+   "quantity_total": 8,
+   "condition": "good",
+   "reuse_mode": "resale",
+   "unit_price_per_day_try": 0,
+   "availability": [
+    {
+     "available_from": "2026-11-20",
+     "available_until": "2026-11-25",
+     "quantity_available": 8
+    }
+   ]
+  }
+ ],
+ "impact_assumptions": [
+  {
+   "category": "tables",
+   "avoided_kgco2e_per_unit": null,
+   "source_reference": null,
+   "assumption_status": "illustrative"
+  },
+  {
+   "category": "chairs",
+   "avoided_kgco2e_per_unit": null,
+   "source_reference": null,
+   "assumption_status": "illustrative"
+  },
+  {
+   "category": "lighting",
+   "avoided_kgco2e_per_unit": null,
+   "source_reference": null,
+   "assumption_status": "illustrative"
+  },
+  {
+   "category": "signage",
+   "avoided_kgco2e_per_unit": null,
+   "source_reference": null,
+   "assumption_status": "illustrative"
+  },
+  {
+   "category": "staging",
+   "avoided_kgco2e_per_unit": null,
+   "source_reference": null,
+   "assumption_status": "illustrative"
+  }
+ ]
+}

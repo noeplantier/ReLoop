@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic>=2
+supabase
+python-dotenv
+# dev / tests
+pytest
+httpx
+# stretch (MILP batch), not used yet: scipy

@@ -1,0 +1,15 @@
+{
+  "_README": "Placeholders only. NO numbers are invented here. Fill a value ONLY with a published factor and record where it came from in 'source'. A category with value null reports impact as 'unavailable'.",
+  "per_category_avoided_kgco2e_per_unit": {
+    "tables":   {"value": null, "source": null, "status": "illustrative"},
+    "chairs":   {"value": null, "source": null, "status": "illustrative"},
+    "lighting": {"value": null, "source": null, "status": "illustrative"},
+    "signage":  {"value": null, "source": null, "status": "illustrative"},
+    "staging":  {"value": null, "source": null, "status": "illustrative"}
+  },
+  "transport_kgco2e_per_tonne_km": {
+    "value": null,
+    "source": null,
+    "note": "Needed to subtract delivery emissions. Look up a published road-freight factor (e.g. DEFRA/UK government GHG conversion factors) before filling."
+  }
+}
