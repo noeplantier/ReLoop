@@ -38,8 +38,9 @@ def post_match(req: MatchRequest):
     inv = load_inventory()
     r = req.model_dump(mode="json")
     top, total, days = match.rank(r, inv["items"], inv["suppliers"])
+    by_id = {i["id"]: i for i in inv["items"]}
     for m in top:
-        m["impact"] = impact.estimate(m["category"], m["quoted_quantity"], FACTORS)
+        m["impact"] = impact.estimate(by_id[m["item_id"]], m["quoted_quantity"], FACTORS, m["distance_km"])
         m.pop("category")
     sugg = match.suggestions(r, inv["items"], inv["suppliers"], total)
     return {"request_id": req.request_id, "days": days, "total_options": total,
@@ -65,7 +66,7 @@ def impact_summary(req: SummaryRequest):
         if it["unit_price_per_day_try"]:
             cost += it["unit_price_per_day_try"] * s.quantity * days
             any_cost = True
-        e = impact.estimate(it["category"], s.quantity, FACTORS)
+        e = impact.estimate(it, s.quantity, FACTORS, km)
         statuses.append(e["status"])
         for a in e["assumptions"]:
             if a not in assumptions:

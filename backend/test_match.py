@@ -96,13 +96,28 @@ def test_api_match_contract_and_no_invented_impact():
     assert body["request_id"] == "req-1" and len(body["matches"]) == 3
     m = body["matches"][0]
     assert m["explanation"] is None
-    assert m["impact"]["status"] == "unavailable" and m["impact"]["avoided_kgco2e"] is None
+    assert m["impact"]["status"] == "illustrative"      # weights are demo estimates
+    assert m["impact"]["avoided_kgco2e"] > 0 and m["impact"]["assumptions"]
 
 
 def test_api_validation():
     assert client.post("/match", json=req(start_date="2026-11-24")).status_code == 422
     assert client.post("/match", json=req(quantity=0)).status_code == 422
     assert client.post("/match", json=req(category="boats")).status_code == 422
+
+
+def test_impact_hand_calculation():
+    import json
+    from pathlib import Path
+    import impact
+    f = json.loads((Path(__file__).parent / "impact_factors.json").read_text(encoding="utf-8"))
+    item = {"weight_kg": 5.0, "main_material": "metals", "weight_is_estimate": True}
+    e = impact.estimate(item, 50, f, distance_km=10)
+    # embodied = 0.25 t x 3824.09335 = 956.0233 ; transport = 0.19748 x 0.25 x 10 = 0.4937
+    assert e["avoided_kgco2e"] == 955.53 and e["status"] == "illustrative"
+    assert impact.estimate({"weight_kg": None, "main_material": None}, 5, f)["status"] == "unavailable"
+    real = impact.estimate({**item, "weight_is_estimate": False}, 50, f, distance_km=10)
+    assert real["status"] == "sourced"
 
 
 def test_api_empty_result_is_200():
@@ -117,7 +132,7 @@ def test_api_impact_summary():
         "end_date": "2026-11-23", "location": LARA}]})
     assert r.status_code == 200
     j = r.json()
-    assert j["reused_units"] == 50 and j["impact_status"] == "unavailable" and j["avoided_kgco2e"] is None
+    assert j["reused_units"] == 50 and j["impact_status"] == "illustrative" and j["avoided_kgco2e"] > 0
     bad = client.post("/impact/summary", json={"selections": [{
         "item_id": "nope", "quantity": 1, "start_date": "2026-11-21",
         "end_date": "2026-11-23", "location": LARA}]})

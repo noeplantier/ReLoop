@@ -52,6 +52,9 @@ def _load_supabase():
             "condition": r["condition"], "reuse_mode": r["reuse_mode"],
             "unit_price_per_day_try": None if r["unit_price_per_day_try"] is None
             else float(r["unit_price_per_day_try"]),
+            "weight_kg": None if r.get("weight_kg") is None else float(r["weight_kg"]),
+            "main_material": r.get("main_material"),
+            "weight_is_estimate": r.get("weight_is_estimate", True),
             "availability": [{"available_from": a["available_from"],
                               "available_until": a["available_until"],
                               "quantity_available": a["quantity_available"]}

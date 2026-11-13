@@ -7,6 +7,9 @@ select 'inventory_items', count(*) from inventory_items union all
 select 'inventory_availability', count(*) from inventory_availability union all
 select 'impact_assumptions', count(*) from impact_assumptions;
 
+-- 1b) Every item has a weight and material (expect 0 rows)
+select id, name from inventory_items where weight_kg is null or main_material is null;
+
 -- 2) RLS enabled on every table (expect all true)
 select relname, relrowsecurity from pg_class
 where relname in ('suppliers','equipment_categories','inventory_items','inventory_availability','impact_assumptions')

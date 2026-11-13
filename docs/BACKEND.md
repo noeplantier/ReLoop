@@ -37,7 +37,7 @@ curl -X POST localhost:8000/impact/summary -H "Content-Type: application/json" -
 
 ## Placeholders and limits (be honest in the pitch)
 - All inventory is fictional.
-- CO2: `backend/impact_factors.json` has NO numbers yet. Until a published factor is entered, `impact.status` is `unavailable` and `avoided_kgco2e` is `null`. Factors with no source are labelled `illustrative`. Transport emissions are not deducted until a sourced transport factor is added.
+- CO2: avoided = weight x DEFRA 2025 material factor (new item we avoid producing) minus delivery (rigid truck, one-way). Factors are read from the official UK Government GHG Conversion Factors 2025 file (see `backend/impact_factors.json` for exact rows). Item weights and materials are ROUGH ESTIMATES for fictional items, so every number is `illustrative`. UK factors are a proxy for Turkey; use phase and end-of-life are ignored; the avoided new item's own delivery is not counted. In the pitch say "estimated", never "measured".
 - Cost savings versus buying new is NOT implemented: the schema has only rental price per day, no new-purchase price.
 - Availability is declared stock, not reservations. Two requests can see the same stock.
 - A stay split across two windows of one item is not matched (rule: one window covers the whole range).
@@ -45,5 +45,5 @@ curl -X POST localhost:8000/impact/summary -H "Content-Type: application/json" -
 - Batch/MILP (`/match/batch`) is not built (stretch).
 
 ## Supabase setup (manual, owner of the project)
-1. Create a project. 2. SQL editor: run `supabase/migrations/0001..0003` in order, then `supabase/seed.sql`, then `supabase/verify.sql`.
+1. Create a project. 2. SQL editor: run `supabase/migrations/0001..0004` in order, then `supabase/seed.sql`, then `supabase/verify.sql`.
 3. Put `SUPABASE_URL` and the service-role key in `backend/.env` (never commit). The mobile/web app must NOT get the service-role key and does not read tables directly.

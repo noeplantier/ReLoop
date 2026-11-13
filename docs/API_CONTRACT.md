@@ -58,9 +58,9 @@ Response
       },
       "explanation": null,
       "impact": {
-        "avoided_kgco2e": null,
-        "status": "unavailable",
-        "assumptions": ["No sourced emission factor loaded yet."]
+        "avoided_kgco2e": 956.02,
+        "status": "illustrative",
+        "assumptions": ["Avoided: producing 50 new unit(s) of metals, about 5.0 kg each = 0.250 t x 3824.09335 kgCO2e/t = 956.0 kgCO2e.", "Factor source: DESNZ/Defra 2025, ...", "Item weight and material are rough estimates for demo data."]
       }
     }
   ],
@@ -70,7 +70,7 @@ Response
 - `estimated_cost_try` = `unit_price_per_day_try * quantity * days`, or `null` for free loans / no price.
 - `covers_quantity` is `false` when the item has fewer units than requested (shown but ranked lower).
 - `explanation` is filled by the AI layer (Sueda) using ONLY `breakdown`, `distance_km`, `condition`. Backend returns `null`.
-- `impact.status`: `"sourced"` (published factor), `"illustrative"` (placeholder, must be labelled in the UI), or `"unavailable"`. Never present `illustrative` as a verified claim.
+- `impact.avoided_kgco2e` = kgCO2e of producing the NEW items we avoid (weight x DEFRA 2025 material factor) minus delivery emissions. `impact.status`: `"sourced"` (real weights), `"illustrative"` (weights/materials are demo estimates: the UI MUST label it "estimate", never a verified claim) or `"unavailable"` (data missing, `avoided_kgco2e` is `null`). `assumptions` lists the calculation in plain text, show it on demand.
 - `suggestions` (what-if, later): `{ "type": "shift_date", "detail": "Starting 1 day later adds 2 options" }`.
 - Empty `matches` is a valid 200 response.
 
@@ -83,9 +83,9 @@ Response
   "reused_units": 50,
   "total_distance_km": 12.4,
   "estimated_cost_try": 1800.0,
-  "avoided_kgco2e": null,
-  "impact_status": "unavailable",
-  "assumptions": []
+  "avoided_kgco2e": 956.02,
+  "impact_status": "illustrative",
+  "assumptions": ["..."]
 }
 ```
 
@@ -102,5 +102,5 @@ CORS allows `http://localhost:5173`, `http://localhost:3000`, `http://localhost:
 
 ## Open points
 1. Should one option be able to combine several suppliers to cover the quantity (bundle)? v1: one item per option.
-2. Cost savings vs buying new needs a new-price baseline column; not in the schema yet.
+2. Cost savings vs buying new needs a new-price baseline column; not in the schema yet (not shown in the dashboard).
 3. Units/currency: prices are TRY per unit per day.
