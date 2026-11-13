@@ -1,6 +1,6 @@
 # Backend hand-off (for Noé and Sueda)
 
-Status: works end to end on the offline JSON inventory. Supabase loader is written but NOT yet tested against a live project.
+Status: works end to end on the offline JSON inventory. The SQL (migrations + seed) is validated on a local in-process Postgres (`cd supabase/tests && npm install && npm test`: 22 checks incl. overlap, stock and RLS rules). The Supabase loader and the real Supabase project are NOT yet tested live.
 
 ## Run
 ```
