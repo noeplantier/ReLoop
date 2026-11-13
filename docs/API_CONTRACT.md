@@ -93,11 +93,27 @@ Response
 - `POST /parse-request`: `{ "text": "50 chairs near Lara on 21-23 Nov" }` returns a `/match` request or a list of them.
 - `POST /explain`: `{ "request": {...}, "match": {...} }` returns `{ "explanation": "..." }`.
 
-## Later (stretch)
-- `POST /match/batch`: several requests sharing stock, greedy vs MILP comparison.
+## POST /match/batch
+Several requests (2-10) that compete for the same stock. Returns a greedy baseline and the MILP optimum side by side.
+Request: `{ "requests": [ <match request>, ... ], "max_suppliers_per_request": 2 }` (`request_id` optional; missing ids become `req-1`, `req-2`...; ids must be unique).
+Response
+```json
+{
+  "allocations": [ { "request_id": "R1", "lines": [ { "item_id": "...", "name": "...", "supplier": "...", "quantity": 150, "distance_km": 0.0 } ], "unmet": 0 } ],
+  "comparison": {
+    "greedy": { "allocations": [ "..." ], "summary": { "covered_requests": 2, "total_requests": 3, "unmet_units": 20, "total_score": 371.9, "total_distance_km": 14.5 } },
+    "milp":   { "allocations": [ "..." ], "summary": { "covered_requests": 3, "total_requests": 3, "unmet_units": 0,  "total_score": 386.11, "total_distance_km": 7.7 } }
+  },
+  "note": null
+}
+```
+- Top-level `allocations` = the MILP plan (the one to show). `comparison` is for the "greedy vs optimised" slide.
+- Greedy = first come, first served in the order sent. MILP decides all requests together. Stock is shared per availability window.
+- `note` is set (and `milp` = `greedy`) only if the solver fails; the endpoint never breaks `/match`.
+- This is optimisation, not AI: say so in the pitch.
 
 ## Errors
-Invalid input: HTTP 422 (FastAPI default). Other errors: `{ "error": "message" }`.
+Invalid input: HTTP 422 (FastAPI default). Other errors: `{ "error": "message" }` (404 unknown id, 500 `internal error`, 503 batch solver unavailable).
 CORS allows `http://localhost:5173`, `http://localhost:3000`, `http://localhost:8081`, plus the deployed web origin.
 
 ## Open points

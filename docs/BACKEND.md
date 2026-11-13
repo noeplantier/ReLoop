@@ -8,7 +8,7 @@ cd backend
 python -m venv venv
 venv\Scripts\activate          # Windows  (macOS/Linux: source venv/bin/activate)
 pip install -r requirements.txt
-python -m pytest -q             # 13 tests, no network needed
+python -m pytest -q             # 25 tests, no network needed
 uvicorn main:app --reload       # docs: http://localhost:8000/docs
 ```
 Without `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` the API silently uses `backend/data/inventory.json`.
@@ -42,7 +42,7 @@ curl -X POST localhost:8000/impact/summary -H "Content-Type: application/json" -
 - Availability is declared stock, not reservations. Two requests can see the same stock.
 - A stay split across two windows of one item is not matched (rule: one window covers the whole range).
 - Scoring weights are not validated against real user preferences.
-- Batch/MILP (`/match/batch`) is not built (stretch).
+- Batch/MILP is built (`POST /match/batch`, see docs/DEMO_SCENARIO.md) but tested on the synthetic inventory only. In scenarios with enough stock greedy and MILP give the same plan; the advantage appears when requests compete.
 
 ## Supabase setup (manual, owner of the project)
 1. Create a project. 2. SQL editor: run `supabase/migrations/0001..0004` in order, then `supabase/seed.sql`, then `supabase/verify.sql`.

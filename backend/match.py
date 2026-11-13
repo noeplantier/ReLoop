@@ -109,6 +109,8 @@ def rank(request, inventory, suppliers, top_n=TOP_N):
             "breakdown": {"distance_score": round(dist_s, 3), "condition_score": cond_s,
                           "price_score": round(ps, 3), "weights": dict(WEIGHTS)},
             "explanation": None,
+            # internal: which stock window was used (the batch solver shares stock per window)
+            "window_key": [w["available_from"], w["available_until"]],
         })
     # Options that cover the full quantity come first; then score; item_id breaks ties deterministically.
     rows.sort(key=lambda r: (not r["covers_quantity"], -r["score"], r["item_id"]))

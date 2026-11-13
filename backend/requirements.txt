@@ -3,7 +3,8 @@ uvicorn[standard]
 pydantic>=2
 supabase
 python-dotenv
+numpy
+scipy>=1.9
 # dev / tests
 pytest
 httpx
-# stretch (MILP batch), not used yet: scipy

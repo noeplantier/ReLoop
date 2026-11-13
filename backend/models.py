@@ -21,7 +21,7 @@ class Requirements(BaseModel):
 class MatchRequest(BaseModel):
     request_id: Optional[str] = None
     category: Category
-    quantity: int = Field(gt=0)
+    quantity: int = Field(gt=0, le=100000)
     start_date: date
     end_date: date
     location: Location
@@ -31,6 +31,8 @@ class MatchRequest(BaseModel):
     def _dates(self):
         if self.end_date < self.start_date:
             raise ValueError("end_date must be on or after start_date")
+        if (self.end_date - self.start_date).days > 60:
+            raise ValueError("date range longer than 60 days")
         return self
 
 
@@ -79,14 +81,14 @@ class MatchResponse(BaseModel):
 
 class Selection(BaseModel):
     item_id: str
-    quantity: int = Field(gt=0)
+    quantity: int = Field(gt=0, le=100000)
     start_date: date
     end_date: date
     location: Location
 
 
 class SummaryRequest(BaseModel):
-    selections: list[Selection] = Field(min_length=1)
+    selections: list[Selection] = Field(min_length=1, max_length=50)
 
 
 class SummaryResponse(BaseModel):
@@ -96,3 +98,57 @@ class SummaryResponse(BaseModel):
     avoided_kgco2e: Optional[float]
     impact_status: Literal["sourced", "illustrative", "unavailable"]
     assumptions: list[str]
+
+
+class BatchRequest(BaseModel):
+    requests: list[MatchRequest] = Field(min_length=1, max_length=10)
+    max_suppliers_per_request: int = Field(default=2, ge=1, le=5)
+
+    @model_validator(mode="after")
+    def _ids(self):
+        # fill missing ids and require uniqueness: allocations are matched back by request_id
+        for i, r in enumerate(self.requests, 1):
+            if not r.request_id:
+                r.request_id = f"req-{i}"
+        ids = [r.request_id for r in self.requests]
+        if len(set(ids)) != len(ids):
+            raise ValueError("request_id values must be unique")
+        return self
+
+
+class BatchLine(BaseModel):
+    item_id: str
+    name: str
+    supplier: str
+    quantity: int
+    distance_km: float
+
+
+class BatchAllocation(BaseModel):
+    request_id: Optional[str]
+    lines: list[BatchLine]
+    unmet: int
+
+
+class BatchSummary(BaseModel):
+    covered_requests: int
+    total_requests: int
+    unmet_units: int
+    total_score: float
+    total_distance_km: float
+
+
+class MethodResult(BaseModel):
+    allocations: list[BatchAllocation]
+    summary: BatchSummary
+
+
+class BatchComparison(BaseModel):
+    greedy: MethodResult
+    milp: MethodResult
+
+
+class BatchResponse(BaseModel):
+    allocations: list[BatchAllocation]
+    comparison: BatchComparison
+    note: Optional[str] = None
