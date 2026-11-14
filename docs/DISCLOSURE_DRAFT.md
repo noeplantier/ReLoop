@@ -42,10 +42,11 @@ materials are estimates, so every figure is labelled illustrative. Method and fa
 python-dotenv, PGlite (tests), React, Vite, TypeScript `<complete from frontend/package.json>`. Used under
 their respective open-source licences. Repository licence: `<none declared / choose one>`.
 
-**Evaluation status.** On 30 hand-written English test requests the rule-based parser read 20/30 fully
-correctly; when unsure it leaves fields for the user to fill in rather than guessing. No explanation
-contained a number missing from the engine data (0/8). The LLM path has not been evaluated live. The AI
-layer is not described as validated.
+**Evaluation status.** On 20 held-out English test requests (written after the parser was tuned and not
+used for tuning) the rule-based parser read 14/20 fully correctly; when unsure it left the field for the user
+or showed a warning, and it never invented a value. On the 30 cases it was tuned on it scores 30/30, which is
+not an independent result. No explanation contained a number missing from the engine data. The LLM path has
+not been evaluated live. The AI layer is not described as validated (`docs/AI_EVAL_RULES.md`).
 
 **Limitations and next validation step.** Fictional inventory; availability is declared, not booked; no
 payments or reservations; scoring weights are design choices. Next: a pilot with 2–3 Antalya venues using

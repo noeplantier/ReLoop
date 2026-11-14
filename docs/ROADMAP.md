@@ -19,7 +19,7 @@ Team targets: full phone journey Sun 15:00, feature freeze Sun 19:00. Runtime AI
 | 2.1 /plan | DEFERRED (Noé, 14 Nov): only after the phone journey works, as a small time-boxed proposal that does not touch matching or force a frontend rewrite | |
 | 2.2 Shared-stock story | Done (in docs/PITCH_NUMBERS.md) | |
 | 2.3 LLM live | llm.py verified against SDK 2.8.0 (mocked); AI off without key (verified) | Noé: provider + budget; Sueda: merge feat/web-ai |
-| 2.4 AI eval | Rules: 20/30, 0/8 ungrounded (docs/AI_EVAL_RULES.md). LLM run pending | key |
+| 2.4 AI eval | Rules parser: held-out 14/20 (independent), tuned set 30/30 (not independent), 0/8 ungrounded explanations (docs/AI_EVAL_RULES.md). LLM run pending | key |
 | 3.1 Deployed e2e | `tools/smoke.py` ready | backend URL |
 | 3.2 Frontend notes | Sent to Sueda | |
 | 3.3 Backup video | | Noé / Sueda |

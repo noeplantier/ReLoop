@@ -89,19 +89,76 @@ CASES = [
      "needs": {"chairs": 40}, "dates": (N + "23", N + "24"), "place": "kepez", "cond": "excellent", "hard": True},
 ]
 
+# HELD-OUT set: written on 14 Nov 2026 AFTER the parser was tuned on CASES, and not shared with the AI-layer
+# author before measuring, so it gives an independent estimate. Do not tune the parser on these; if they
+# are ever used for fixes, write a new held-out set.
+HELDOUT = [
+    {"id": "H1", "text": "Looking for 120 chairs in Kepez for 21–22 November",
+     "needs": {"chairs": 120}, "dates": (N + "21", N + "22"), "place": "kepez"},
+    {"id": "H2", "text": "Need 6 trestle tables and 60 folding chairs near Belek, 23 to 24 November",
+     "needs": {"tables": 6, "chairs": 60}, "dates": (N + "23", N + "24"), "place": "belek"},
+    {"id": "H3", "text": "Antalya city center, 22 Nov: 4 spotlights",
+     "needs": {"lighting": 4}, "dates": (N + "22", N + "22"), "place": "antalya"},
+    {"id": "H4", "text": "Konyaalti 21–23/11: 2 stages and 10 banners",
+     "needs": {"staging": 2, "signage": 10}, "dates": (N + "21", N + "23"), "place": "konyaalti", "hard": True},
+    {"id": "H5", "text": "Please find 35 chairs, Lara, from Saturday 21 November until Monday 23 November",
+     "needs": {"chairs": 35}, "dates": (N + "21", N + "23"), "place": "lara"},
+    {"id": "H6", "text": "We'd like 15 tables for a wedding in Kemer on the 24th of November",
+     "needs": {"tables": 15}, "dates": (N + "24", N + "24"), "place": "kemer"},
+    {"id": "H7", "text": "1 podium near Lara on 21 Nov",
+     "needs": {"staging": 1}, "dates": (N + "21", N + "21"), "place": "lara"},
+    {"id": "H8", "text": "Need 40 chairs and a projector in Belek, 22-23 Nov",
+     "needs": {"chairs": 40}, "dates": (N + "22", N + "23"), "place": "belek", "warn": "projector"},
+    {"id": "H9", "text": "10 chairs",
+     "needs": {"chairs": 10}, "dates": None, "place": None, "missing": {"dates", "location"}},
+    {"id": "H10", "text": "Kepez, 25 November, 30 chairs, 5 tables, 3 signs",
+     "needs": {"chairs": 30, "tables": 5, "signage": 3}, "dates": (N + "25", N + "25"), "place": "kepez"},
+    {"id": "H11", "text": "need 50 chairs between 21 and 23 November near Lara",
+     "needs": {"chairs": 50}, "dates": (N + "21", N + "23"), "place": "lara"},
+    {"id": "H12", "text": "200 seats + 20 tables @ Konyaalti, 22-24 nov",
+     "needs": {"chairs": 200, "tables": 20}, "dates": (N + "22", N + "24"), "place": "konyaalti"},
+    {"id": "H13", "text": "Could we borrow 8 LED lights in Belek for Nov 21-22?",
+     "needs": {"lighting": 8}, "dates": (N + "21", N + "22"), "place": "belek"},
+    {"id": "H14", "text": "45 chairs near Lara on 30 November",
+     "needs": {"chairs": 45}, "dates": (N + "30", N + "30"), "place": "lara"},
+    {"id": "H15", "text": "Kemer 21-23 Nov: 50 chairs in excellent condition within 25 km",
+     "needs": {"chairs": 50}, "dates": (N + "21", N + "23"), "place": "kemer", "cond": "excellent", "km": 25},
+    {"id": "H16", "text": "We need 12 round tables and 96 chairs for a gala dinner in Lara, November 22nd",
+     "needs": {"tables": 12, "chairs": 96}, "dates": (N + "22", N + "22"), "place": "lara"},
+    {"id": "H17", "text": "3 stage platforms, Kepez, 23.11 - 24.11",
+     "needs": {"staging": 3}, "dates": (N + "23", N + "24"), "place": "kepez", "hard": True},
+    {"id": "H18", "text": "Need twenty chairs in Belek on 21 Nov",
+     "needs": {"chairs": 20}, "dates": (N + "21", N + "21"), "place": "belek", "hard": True},
+    {"id": "H19", "text": "100 chairs Paris 21-23 Nov",
+     "needs": {"chairs": 100}, "dates": (N + "21", N + "23"), "place": None, "missing": {"location"}},
+    {"id": "H20", "text": "need chairs and tables in Lara on 21-23 Nov, around 30 of each",
+     "needs": {"chairs": 30, "tables": 30}, "dates": (N + "21", N + "23"), "place": "lara", "hard": True},
+]
+SETS = {"original": CASES, "heldout": HELDOUT}
+
 EXPLAIN_REQUESTS = [("chairs", 50, "lara"), ("lighting", 2, "lara"), ("tables", 10, "belek")]
 PRESET = {"lara": (36.853, 30.80), "belek": (36.86, 31.05)}
 
 
-def post(base, path, body, timeout=60):
-    req = urllib.request.Request(base.rstrip("/") + path, data=json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json"}, method="POST")
-    t = time.time()
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status, json.loads(r.read()), time.time() - t
-    except urllib.error.HTTPError as e:
-        return e.code, json.loads(e.read() or b"null"), time.time() - t
+def post(base, path, body, timeout=60, retries=3):
+    """POST; on HTTP 429 (the API's per-minute limit) wait Retry-After seconds and try again, so a run
+    against the deployed API is slow but complete. The daily AI cap is not retried."""
+    for attempt in range(retries + 1):
+        req = urllib.request.Request(base.rstrip("/") + path, data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        t = time.time()
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.status, json.loads(r.read()), time.time() - t
+        except urllib.error.HTTPError as e:
+            payload = json.loads(e.read() or b"null")
+            per_minute = e.code == 429 and "per minute" in str(payload)
+            if per_minute and attempt < retries:
+                wait = int(e.headers.get("Retry-After") or 60)
+                print(f"  rate limited on {path}; waiting {wait}s", file=sys.stderr)
+                time.sleep(wait)
+                continue
+            return e.code, payload, time.time() - t
 
 
 def grade(case, got):
@@ -141,16 +198,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("base_url")
     ap.add_argument("--out", help="also write the Markdown report here")
+    ap.add_argument("--set", choices=sorted(SETS), default="original",
+                    help="original = the 30 cases the parser was tuned on; heldout = 20 independent cases")
     a = ap.parse_args()
     base = a.base_url
-    lines = [f"# AI layer evaluation (English, {len(CASES)} parse cases)\n",
+    cases = SETS[a.set]
+    lines = [f"# AI layer evaluation (English, {a.set} set, {len(cases)} parse cases)\n",
              f"API: `{base}`. Generated by `backend/tools/ai_eval.py`; expected values are hand-written.\n"]
 
     # ---------- part 1: parsing ----------
     fields = ["needs", "dates", "location", "filters", "asks_for_missing", "flags_unsupported"]
     score = {f: [0, 0] for f in fields}
     fully, parsers, fails, times = 0, {}, [], []
-    for c in CASES:
+    for c in cases:
         code, got, dt = post(base, "/parse-request", {"text": c["text"], "context": {"today": TODAY}})
         times.append(dt)
         if code != 200:
@@ -171,15 +231,15 @@ def main():
     lines.append("## Part 1: parsing free text into a request\n")
     lines.append(f"Parser that answered: {', '.join(f'{k} x{v}' for k, v in parsers.items()) or 'none'}. "
                  f"Median latency {sorted(times)[len(times) // 2]:.2f} s.\n")
-    lines.append(f"**Fully correct: {fully}/{len(CASES)}**\n")
+    lines.append(f"**Fully correct: {fully}/{len(cases)}**\n")
     lines.append("| Field | Correct |\n|---|---|")
     for f in fields:
         ok, tot = score[f]
         if tot:
             lines.append(f"| {f} | {ok}/{tot} |")
-    hard = [c for c in CASES if c.get("hard")]
+    hard = [c for c in cases if c.get("hard")]
     hard_ok = sum(1 for c in hard if c not in [x[0] for x in fails])
-    lines.append(f"\nHARD cases (written-out numbers, numeric date formats, 'x 25', 'like-new'): {hard_ok}/{len(hard)} fully correct.\n")
+    lines.append(f"\nHARD cases (written-out numbers, unusual date formats, vague quantities): {hard_ok}/{len(hard)} fully correct.\n")
     if fails:
         lines.append("### Not fully correct\n")
         for c, wrong, got in fails:

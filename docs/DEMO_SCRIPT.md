@@ -34,7 +34,7 @@ All inventory is fictional; say so once, at the start.
 | 50 chairs, Lara hall | "about 96 to 956 kg CO2e avoided, estimated" (95.6–956.0 in the file) |
 | Whole demo request (top option per need) | "roughly 100 to 1,000 kg CO2e, estimated" (98.95–989.87) |
 | Three events | "in our demo scenario: all three covered instead of two, 7.7 instead of 14.5 km" |
-| AI parsing | only the measured result from `docs/AI_EVAL_*.md`, e.g. "20 of 30 test requests fully correct with the rule fallback; it never invented a value, it asked". Quote the LLM figure only once `docs/AI_EVAL_LLM.md` exists. |
+| AI parsing | only the HELD-OUT result from `docs/AI_EVAL_RULES.md`: "on 20 new test requests it had never seen, the rule-based parser got 14 fully right; when unsure it asked or warned, and it never invented a quantity, date or place". Not the 30/30 (tuned on those cases). Never "validated". Quote an LLM figure only once `docs/AI_EVAL_LLM.md` exists. |
 | Robustness | "small changes to the scoring weights keep the first recommendation in about 94% of cases" |
 
 Never say: "saved", "measured", "verified", "always", or a percentage improvement in general.
