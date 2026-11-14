@@ -1,6 +1,6 @@
 # Backend hand-off (for Noé and Sueda)
 
-Status: works end to end on the offline JSON inventory. The SQL (migrations + seed) is validated on a local in-process Postgres (`cd supabase/tests && npm install && npm test`: 22 checks incl. overlap, stock and RLS rules). The Supabase loader and the real Supabase project are NOT yet tested live.
+Status: works end to end on the offline JSON inventory. The SQL (migrations + seed) is validated on a local in-process Postgres (`cd supabase/tests && npm install && npm test`: 31 checks incl. overlap, stock, RLS and the read-only role). Migrations 0001-0005 + seed are applied on the team Supabase project (14 Nov). The API has NOT yet read from it live: that needs `DATABASE_URL` (read-only role) or the service-role key on the server.
 
 ## Run
 ```
@@ -8,7 +8,7 @@ cd backend
 python -m venv venv
 venv\Scripts\activate          # Windows  (macOS/Linux: source venv/bin/activate)
 pip install -r requirements.txt
-python -m pytest -q             # 31 tests, no network needed
+python -m pytest -q             # 33 tests, no network needed
 uvicorn main:app --reload       # docs: http://localhost:8000/docs
 ```
 Without `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` the API silently uses `backend/data/inventory.json`.

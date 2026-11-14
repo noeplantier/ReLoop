@@ -1,5 +1,12 @@
 """Inventory loader: Supabase first, offline JSON fallback so the demo never depends on the network.
 
+Supabase is read in one of two ways (first one configured wins):
+  1. DATABASE_URL  -> Postgres login of the read-only role `reloop_reader` (migration 0005): it can
+                      read the 5 ReLoop tables and nothing else. Preferred.
+  2. SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY -> supabase-py. Works, but that key can read every
+                      table in the shared project; keep it only as a fallback.
+Both report source "supabase".
+
 Both sources are normalised to the same shape:
   suppliers : {supplier_id: {id, name, city, latitude, longitude}}
   items     : [{id, supplier_id, category (slug), name, quantity_total, condition, reuse_mode,
@@ -35,12 +42,37 @@ def _load_json():
     }
 
 
+QUERY = (Path(__file__).parent / "inventory_query.sql").read_text(encoding="utf-8")
+
+
+def _from_query_json(doc):
+    """Normalise the JSON document returned by inventory_query.sql."""
+    def num(v):
+        return None if v is None else float(v)
+    items = [{**i, "unit_price_per_day_try": num(i["unit_price_per_day_try"]),
+              "weight_kg": num(i["weight_kg"])} for i in doc["items"]]
+    return {"suppliers": {s["id"]: s for s in doc["suppliers"]}, "items": items,
+            "categories": doc["categories"], "source": "supabase"}
+
+
+def _load_postgres(dsn):
+    import psycopg   # lazy: not needed for the fallback
+
+    # prepare_threshold=None: works through Supabase's transaction pooler (port 6543) too.
+    with psycopg.connect(dsn, connect_timeout=SUPABASE_TIMEOUT_S, prepare_threshold=None) as conn:
+        doc = conn.execute(QUERY).fetchone()[0]
+    return _from_query_json(doc)
+
+
 def _load_supabase():
+    dsn = os.getenv("DATABASE_URL")
+    if dsn:
+        return _load_postgres(dsn)
     from supabase import ClientOptions, create_client   # lazy: not needed for the fallback
 
     url, key = os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
-        raise RuntimeError("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set")
+        raise RuntimeError("DATABASE_URL or SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set")
     # Short timeout: if Supabase hangs, fall back to JSON quickly instead of freezing the demo.
     sb = create_client(url, key, options=ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_S))
     sups = sb.table("suppliers").select("*").execute().data

@@ -5,7 +5,21 @@
   applied. Checked: 5 suppliers, 5 categories, 30 items, 31 windows, 5 impact assumptions; RLS on for
   all 5 tables; `anon` / `authenticated` cannot read them. The project also holds other, unrelated
   tables; ReLoop's migrations do not touch them.
+- Read-only role `reloop_reader` (migration 0005) created on Supabase. Checked live: it can SELECT
+  the 5 ReLoop tables only; the other 25 tables/views in the project (staff, payroll, ...) are not
+  readable; no insert/update/delete; no RLS bypass. Its password is NOT set yet (see below).
 - Render: NOT deployed yet (waiting for access to the team workspace).
+
+## Connecting the API with the read-only role (preferred over the service-role key)
+1. A team member sets the password once, in Supabase > SQL editor (never in git or chat):
+   `alter role reloop_reader with password '<long random password>';`
+2. Supabase > Connect > "Transaction pooler": copy the URI, then replace the user `postgres.<ref>`
+   with `reloop_reader.<ref>` and the password with the one from step 1. Shape:
+   `postgresql://reloop_reader.<ref>:<password>@<pooler-host>:6543/postgres`
+3. Put it in Render as `DATABASE_URL` (and in `backend/.env` for local runs). Leave
+   `SUPABASE_SERVICE_ROLE_KEY` empty: then no key that can read other apps' tables is on the server.
+4. `/health` must say `"inventory_source": "supabase"`; if the URL is wrong the API serves the
+   JSON fallback and says `json_fallback`.
 - After deploy: `python tools/smoke.py https://<service>.onrender.com --origin <frontend origin>`
   runs the main demo request and reports whether it used live Supabase or the offline fallback.
 
@@ -13,7 +27,7 @@ Needs: a free Render account connected to the GitHub repo, and the Supabase URL 
 
 1. Render > New > Blueprint > pick the repo (it reads `render.yaml`) or New Web Service with root dir `backend`.
 2. Set environment variables in the Render dashboard (NOT in git):
-   - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (optional: without them the API serves the built-in fictional JSON inventory)
+   - `DATABASE_URL` (preferred, read-only role, see above), or `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (fallback). With none of them the API serves the built-in fictional JSON inventory.
    - `CORS_ORIGINS` = the deployed web app origin(s), comma separated (e.g. `https://reloop.vercel.app`). `*.vercel.app`, `*.netlify.app`, `*.onrender.com` are already allowed.
 3. Check `https://<service>.onrender.com/health` returns `{"status":"ok","inventory_source":"supabase"}` (or `json_fallback`).
 4. Free plan sleeps after ~15 min idle and the first request can take ~30-60 s. Before judging or recording the demo, open `/health` to wake it, and tell the frontend to show a loading state.

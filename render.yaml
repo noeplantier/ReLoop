@@ -13,7 +13,9 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
-      - key: SUPABASE_URL
+      - key: DATABASE_URL          # preferred: read-only role reloop_reader (docs/DEPLOY.md)
+        sync: false
+      - key: SUPABASE_URL          # fallback with the service-role key; leave empty if DATABASE_URL is set
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false

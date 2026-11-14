@@ -4,6 +4,7 @@ import os
 # Empty (not removed) so a developer's backend/.env cannot switch the tests to the live database.
 os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = ""
+os.environ["DATABASE_URL"] = ""
 
 from collections import defaultdict
 
@@ -178,3 +179,26 @@ def test_match_reports_source_missing_quantity_and_cost_note():
     big = client.post("/match", json=R(2, "chairs", 400, 21, 23, "Lara")).json()
     assert big["matches"] and all(not m["covers_quantity"] for m in big["matches"])
     assert all(m["missing_quantity"] == 400 - m["quoted_quantity"] > 0 for m in big["matches"])
+
+
+def test_database_url_takes_priority_and_is_normalised(monkeypatch):
+    import inventory
+    j = _load_json()
+    doc = {"suppliers": list(j["suppliers"].values()), "categories": j["categories"],
+           "items": [{**i, "unit_price_per_day_try": None if i["unit_price_per_day_try"] is None
+                      else str(i["unit_price_per_day_try"])} for i in j["items"]]}   # numeric -> str like Postgres
+    monkeypatch.setenv("DATABASE_URL", "postgresql://reloop_reader@example.invalid/postgres")
+    monkeypatch.setattr(inventory, "_load_postgres", lambda dsn: inventory._from_query_json(doc))
+    inventory._cache.update(t=0.0, data=None)
+    inv = inventory.load_inventory(force_refresh=True)
+    assert inv["source"] == "supabase" and len(inv["items"]) == len(j["items"])
+    assert all(isinstance(i["unit_price_per_day_try"], (float, type(None))) for i in inv["items"])
+    inventory._cache.update(t=0.0, data=None)
+
+
+def test_unreachable_database_url_falls_back_to_json(monkeypatch):
+    import inventory
+    monkeypatch.setenv("DATABASE_URL", "postgresql://reloop_reader:x@127.0.0.1:1/postgres")
+    inventory._cache.update(t=0.0, data=None)
+    assert inventory.load_inventory(force_refresh=True)["source"] == "json_fallback"
+    inventory._cache.update(t=0.0, data=None)

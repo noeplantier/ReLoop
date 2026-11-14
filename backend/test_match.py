@@ -5,6 +5,7 @@ import os
 # Empty (not removed) so a developer's backend/.env cannot switch the tests to the live database.
 os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = ""
+os.environ["DATABASE_URL"] = ""
 
 from fastapi.testclient import TestClient
 
