@@ -1,6 +1,8 @@
 /* ReLoop design tokens. Colours sampled from the original logo (relooplogo.jpg):
    background #0B1828, "R" green #0AB567, loop mint #5EF0B2, wordmark white #FBFDFC. */
 :root {
+  color-scheme: dark; /* single dark brand look, same on every host theme */
+
   /* brand */
   --brand: #0ab567;          /* main colour: the darker green of the "R" */
   --brand-hover: #0cc472;

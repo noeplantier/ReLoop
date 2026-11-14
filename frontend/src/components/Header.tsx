@@ -1,4 +1,5 @@
 import type { DataMode } from "../lib/config";
+import logoUrl from "../assets/logo-mark.png";
 
 export function DataBadge({ mode }: { mode: DataMode }) {
   return (
@@ -15,7 +16,7 @@ export function Header({ mode }: { mode: DataMode }) {
   return (
     <header className="header">
       <a className="brand" href="/" aria-label="ReLoop home">
-        <img src="/logo-mark.png" alt="" width={34} height={36} />
+        <img src={logoUrl} alt="" width={34} height={36} />
         <span className="brand__name">ReLoop</span>
       </a>
       <DataBadge mode={mode} />

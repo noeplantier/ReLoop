@@ -4,7 +4,7 @@ import { RequestScreen, type RequestDraft } from "./screens/RequestScreen";
 import { ReviewScreen, type ReviewedRequest } from "./screens/ReviewScreen";
 import { ResultsScreen, type NeedResult } from "./screens/ResultsScreen";
 import { api, ApiError } from "./lib/api";
-import type { DataMode } from "./lib/config";
+import { API_URL, type DataMode } from "./lib/config";
 import { presetById } from "./lib/presets";
 import type { Explanation, InventorySource, MatchRequest, ParseOut } from "./lib/types";
 import { demoExplain, demoMatch, demoParse } from "./demo/engine";
@@ -28,7 +28,8 @@ function toReviewed(p: ParseOut, d: RequestDraft): ReviewedRequest {
 }
 
 export default function App() {
-  const [mode, setMode] = useState<DataMode>("live");
+  // Without a configured backend (e.g. the static preview) the visible default is the demo inventory.
+  const [mode, setMode] = useState<DataMode>(API_URL ? "live" : "demo");
   const [step, setStep] = useState<Step>("request");
   const [draft, setDraft] = useState<RequestDraft>(EMPTY);
   const [busy, setBusy] = useState(false);
