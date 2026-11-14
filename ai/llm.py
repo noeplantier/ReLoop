@@ -3,7 +3,7 @@
 Config (server-side env only, never in the web app):
   LLM_PROVIDER=anthropic   enable LLM calls (anything else, or unset = rules/template only)
   ANTHROPIC_API_KEY=...    read by the SDK
-  LLM_MODEL=...            default claude-opus-5-5
+  LLM_MODEL=...            default claude-haiku-5-5 (low cost, structured output); team decision 14 Nov
 Cost controls: one call per explicit submit, low effort, bounded max_tokens, 1 retry, short TTL cache.
 Raw user text is never logged.
 """
@@ -15,7 +15,9 @@ import time
 
 log = logging.getLogger("reloop.ai")
 
-DEFAULT_MODEL = "claude-opus-5-5"
+DEFAULT_MODEL = "claude-haiku-5-5"
+# Server-side refusal fallback exists only for these models; Haiku has none, so we must not send it.
+FALLBACK_MODELS = {"claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5", "claude-fable-5-2", "claude-fable-5-1"}
 TIMEOUT_S = 25
 MAX_TOKENS = 4000
 CACHE_TTL_S = 120
@@ -42,15 +44,19 @@ def call_json(system: str, user_payload: dict, schema: dict) -> dict | None:
     try:
         import anthropic
         client = anthropic.Anthropic(timeout=TIMEOUT_S, max_retries=1)
-        resp = client.beta.messages.create(
+        kwargs = dict(
             model=model(),
             max_tokens=MAX_TOKENS,
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",                      # server-side fallback model on a policy decline
             system=system,
             messages=[{"role": "user", "content": payload}],
             output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
         )
+        if model() in FALLBACK_MODELS:
+            # server-side fallback model on a policy decline
+            resp = client.beta.messages.create(**kwargs, betas=["server-side-fallback-2026-07-01"],
+                                               fallbacks="default")
+        else:
+            resp = client.messages.create(**kwargs)
         if resp.stop_reason != "end_turn":
             log.warning("LLM stopped with %s; using fallback", resp.stop_reason)
             return None

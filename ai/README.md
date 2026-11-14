@@ -20,7 +20,7 @@ Two endpoints as a FastAPI `APIRouter`. Contract: `docs/API_CONTRACT_REVIEW.md` 
 ```
 LLM_PROVIDER=anthropic        # unset or anything else = no LLM calls at all
 ANTHROPIC_API_KEY=...         # never in the web app, never committed
-LLM_MODEL=claude-opus-5-5     # optional override
+LLM_MODEL=claude-haiku-5-5    # optional override (default)
 ```
 Cost controls: one call per submit, low effort, `max_tokens` 4000, 25 s timeout, 1 retry, 2-minute cache of
 identical inputs, input capped at 1000 characters and 10 options. Raw user text is not logged.
