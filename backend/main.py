@@ -46,6 +46,10 @@ async def unexpected_error(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"error": "internal error"})
 
 
+# The inventory has rental prices only; nothing else is known, so nothing else is estimated.
+COST_NOTE = ("Rental price only (unit price x quantity x days). Delivery, deposit, setup and "
+             "taxes are not included.")
+
 FACTORS = json.loads((Path(__file__).parent / "impact_factors.json").read_text(encoding="utf-8"))
 
 
@@ -70,7 +74,8 @@ def post_match(req: MatchRequest):
         m.pop("category")
     sugg = match.suggestions(r, inv["items"], inv["suppliers"], total)
     return {"request_id": req.request_id, "days": days, "total_options": total,
-            "matches": top, "suggestions": sugg}
+            "matches": top, "suggestions": sugg, "data_source": inv["source"],
+            "cost_note": COST_NOTE}
 
 
 @app.post("/match/batch", response_model=BatchResponse)

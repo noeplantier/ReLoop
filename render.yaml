@@ -5,7 +5,8 @@ services:
     name: reloop-api
     runtime: python
     rootDir: backend
-    plan: free
+    region: frankfurt     # closest Render region to Turkey
+    plan: free            # sleeps after ~15 min idle; Noé decides on an upgrade for demo day
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health

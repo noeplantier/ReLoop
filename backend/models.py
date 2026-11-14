@@ -56,6 +56,7 @@ class MatchOut(BaseModel):
     condition: str
     available_quantity: int
     quoted_quantity: int
+    missing_quantity: int          # requested - quoted; 0 when this option covers the request
     covers_quantity: bool
     distance_km: float
     unit_price_per_day_try: Optional[float]
@@ -71,12 +72,17 @@ class Suggestion(BaseModel):
     detail: str
 
 
+DataSource = Literal["supabase", "json_fallback"]
+
+
 class MatchResponse(BaseModel):
     request_id: Optional[str]
     days: int
     total_options: int
     matches: list[MatchOut]
     suggestions: list[Suggestion]
+    data_source: DataSource        # live database or the offline fictional dataset
+    cost_note: str                 # what estimated_cost_try does NOT include
 
 
 class Selection(BaseModel):

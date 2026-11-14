@@ -166,3 +166,15 @@ def test_tests_never_use_live_database():
     import inventory
     inventory._cache.update(t=0.0, data=None)
     assert inventory.load_inventory(force_refresh=True)["source"] == "json_fallback"
+
+
+def test_match_reports_source_missing_quantity_and_cost_note():
+    # Noé's demo request: 50 chairs near Lara, 21-23 Nov
+    r = client.post("/match", json=R(1, "chairs", 50, 21, 23, "Lara")).json()
+    assert r["data_source"] == "json_fallback"          # tests never touch the live database
+    assert "Delivery" in r["cost_note"] and "not included" in r["cost_note"]
+    assert all(m["missing_quantity"] == 0 and m["covers_quantity"] for m in r["matches"])
+    # more than any single item holds: every option is partial and says how much is missing
+    big = client.post("/match", json=R(2, "chairs", 400, 21, 23, "Lara")).json()
+    assert big["matches"] and all(not m["covers_quantity"] for m in big["matches"])
+    assert all(m["missing_quantity"] == 400 - m["quoted_quantity"] > 0 for m in big["matches"])

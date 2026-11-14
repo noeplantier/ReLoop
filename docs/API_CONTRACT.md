@@ -45,6 +45,7 @@ Response
       "condition": "excellent",
       "available_quantity": 150,
       "quoted_quantity": 50,
+      "missing_quantity": 0,
       "covers_quantity": true,
       "distance_km": 12.4,
       "unit_price_per_day_try": 12.0,
@@ -64,11 +65,16 @@ Response
       }
     }
   ],
-  "suggestions": []
+  "suggestions": [],
+  "data_source": "supabase",
+  "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
 }
 ```
-- `estimated_cost_try` = `unit_price_per_day_try * quantity * days`, or `null` for free loans / no price.
-- `covers_quantity` is `false` when the item has fewer units than requested (shown but ranked lower).
+- `estimated_cost_try` = `unit_price_per_day_try * quantity * days`, or `null` for free loans / no price. Show `cost_note` next to it.
+- `covers_quantity` is `false` when the item has fewer units than requested (shown but ranked lower). `missing_quantity` = requested − `quoted_quantity` (0 when covered). Never present a partial option as a complete solution.
+- `data_source`: `"supabase"` (live database) or `"json_fallback"` (offline fictional dataset, used when Supabase is unreachable). Same value as `/health`.
+- `matches` holds up to 3 options; fewer when fewer are feasible. A multi-item request ("50 chairs and 2 stage lights") = one `/match` call per category.
+- Added 14 Nov (additive, nothing renamed): `missing_quantity`, `data_source`, `cost_note`.
 - `explanation` is filled by the AI layer (Sueda) using ONLY `breakdown`, `distance_km`, `condition`. Backend returns `null`.
 - `impact.avoided_kgco2e` = kgCO2e of producing the NEW items we avoid (weight x DEFRA 2025 material factor) minus delivery emissions. `impact.status`: `"sourced"` (real weights), `"illustrative"` (weights/materials are demo estimates: the UI MUST label it "estimate", never a verified claim) or `"unavailable"` (data missing, `avoided_kgco2e` is `null`). `assumptions` lists the calculation in plain text, show it on demand.
 - `suggestions` (what-if, later): `{ "type": "shift_date", "detail": "Starting 1 day later adds 2 options" }`.

@@ -98,6 +98,7 @@ def rank(request, inventory, suppliers, top_n=TOP_N):
             "condition": it["condition"],
             "available_quantity": w["quantity_available"],
             "quoted_quantity": quoted,
+            "missing_quantity": qty - quoted,
             "covers_quantity": w["quantity_available"] >= qty,
             "distance_km": round(c["distance_km"], 1),
             "unit_price_per_day_try": price,

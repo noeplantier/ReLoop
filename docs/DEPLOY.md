@@ -1,5 +1,14 @@
 # Deploying the backend (so judges get a public link)
 
+## Status (14 Nov 2026)
+- Supabase (shared team project, region Northeast Asia / Tokyo): migrations 0001–0004 and `seed.sql`
+  applied. Checked: 5 suppliers, 5 categories, 30 items, 31 windows, 5 impact assumptions; RLS on for
+  all 5 tables; `anon` / `authenticated` cannot read them. The project also holds other, unrelated
+  tables; ReLoop's migrations do not touch them.
+- Render: NOT deployed yet (waiting for access to the team workspace).
+- After deploy: `python tools/smoke.py https://<service>.onrender.com --origin <frontend origin>`
+  runs the main demo request and reports whether it used live Supabase or the offline fallback.
+
 Needs: a free Render account connected to the GitHub repo, and the Supabase URL + service-role key.
 
 1. Render > New > Blueprint > pick the repo (it reads `render.yaml`) or New Web Service with root dir `backend`.
