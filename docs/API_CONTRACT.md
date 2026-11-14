@@ -31,6 +31,9 @@ Request
 }
 ```
 - `requirements` is optional. `min_condition`: `"fair" | "good" | "excellent"`.
+- `priority` is optional (added 14 Nov): `"balanced"` (default, same as omitting it) | `"closest"` (distance 0.8,
+  condition 0.1, price 0.1) | `"cheapest"` (0.2 / 0.2 / 0.6) | `"best_condition"` (0.2 / 0.6 / 0.2). Weights are design
+  choices, not learned; the ones used are always in `breakdown.weights`. Good for a "What matters most?" chip row.
 - Hard rules: category matches; ONE availability window covers the whole `start_date..end_date`; reuse mode is `loan` or `rental`; condition and distance limits (if given).
 - `donation` and `resale` items are never returned in this MVP.
 
@@ -86,6 +89,12 @@ Response
 - Carbon is a RANGE (added 14 Nov, additive). `impact.avoided_kgco2e` = UPPER bound: producing the NEW items we avoid (weight x DEFRA 2025 material factor), as if they were bought for this event alone. `impact.avoided_kgco2e_conservative` = the same production shared over the uses a new item would get (`assumed_uses_per_new_item` in `impact_factors.json`, currently 10, an ASSUMPTION), so it is always illustrative. Both have `impact.transport_kgco2e` (delivery AND return, sourced factor) deducted and are floored at 0. `impact.basis` gives one line per bound. UI: show "Estimated 96–956 kg CO2e avoided (illustrative)", with assumptions on demand; never rank options by CO2 (heavier items would win). `impact.status`: `"sourced"` (real weights), `"illustrative"` (weights/materials are demo estimates: the UI MUST label it "estimate", never a verified claim) or `"unavailable"` (data missing, `avoided_kgco2e` is `null`). `assumptions` lists the calculation in plain text, show it on demand.
 - `suggestions` (what-if, later): `{ "type": "shift_date", "detail": "Starting 1 day later adds 2 options" }`.
 - Empty `matches` is a valid 200 response.
+
+## GET /impact/methodology
+Everything behind the carbon range, for a "How we calculate" screen (added 14 Nov). Numbers come only from
+`backend/impact_factors.json`. Shape: `{ summary, formula: {upper, conservative, transport, floor}, dataset: {name,
+published, url, licence, caveat}, factors: [{id, label, value, unit, status, source}], assumptions: [{id, value,
+status, note}], status_labels: {sourced, illustrative, unavailable}, not_counted: [..], limitations: [..] }`.
 
 ## POST /impact/summary
 Aggregates chosen matches for the dashboard.

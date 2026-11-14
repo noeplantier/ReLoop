@@ -91,6 +91,23 @@ def main():
         code, _, s, dt = call(base, "POST", "/impact/summary", {"selections": selections})
         summary = {k: v for k, v in s.items() if k != "assumptions"} if code == 200 else s
         check(code == 200, f"/impact/summary {code}: {summary}")
+        if code == 200:
+            lo, hi = s.get("avoided_kgco2e_conservative"), s.get("avoided_kgco2e")
+            check(lo is not None and hi is not None and lo <= hi, f"  carbon range {lo} to {hi} kgCO2e ({s['impact_status']})")
+
+    code, _, meth, _ = call(base, "GET", "/impact/methodology")
+    check(code == 200 and bool(meth.get("factors")) and bool(meth.get("assumptions")),
+          f"/impact/methodology {code}: {len(meth.get('factors', [])) if code == 200 else meth} factors")
+
+    code, _, h, _ = call(base, "GET", "/health")
+    if code == 200:
+        print(f"       ai_layer={h.get('ai_layer')} llm_enabled={h.get('llm_enabled')} commit={h.get('commit')} "
+              f"inventory_age_s={h.get('inventory_age_s')}")
+        if h.get("ai_layer"):
+            code, _, p, dt = call(base, "POST", "/parse-request",
+                                  {"text": "I need 50 chairs and 2 stage lights near Lara, Antalya, from 21 to 23 November 2026."})
+            ok = code == 200 and [(n["category"], n["quantity"]) for n in p.get("needs", [])] == [("chairs", 50), ("lighting", 2)]
+            check(ok, f"/parse-request {code} in {dt:.1f}s, parser={p.get('parser') if code == 200 else p}")
 
     code, _, e, _ = call(base, "GET", "/does-not-exist")
     check(code == 404 and e == {"error": "Not Found"}, f"error format {code}: {e}")

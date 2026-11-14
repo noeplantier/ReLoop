@@ -132,6 +132,13 @@ def post_match_batch(req: BatchRequest):
     return batch.compare(reqs, inv["items"], inv["suppliers"], req.max_suppliers_per_request)
 
 
+@app.get("/impact/methodology")
+def impact_methodology():
+    """How the carbon range is calculated, with every factor, source and assumption (for a
+    "How we calculate" screen). Numbers come only from impact_factors.json."""
+    return impact.methodology(FACTORS)
+
+
 @app.post("/impact/summary", response_model=SummaryResponse)
 def impact_summary(req: SummaryRequest):
     inv = load_inventory()

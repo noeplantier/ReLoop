@@ -26,6 +26,8 @@ class MatchRequest(BaseModel):
     end_date: date
     location: Location
     requirements: Optional[Requirements] = None
+    # what the organiser cares most about; null = "balanced" (default weights)
+    priority: Optional[Literal["balanced", "closest", "cheapest", "best_condition"]] = None
 
     @model_validator(mode="after")
     def _dates(self):

@@ -8,7 +8,7 @@ cd backend
 python -m venv venv
 venv\Scripts\activate          # Windows  (macOS/Linux: source venv/bin/activate)
 pip install -r requirements.txt
-python -m pytest -q             # 38 tests, no network needed
+python -m pytest -q             # 40 tests, no network needed
 uvicorn main:app --reload       # docs: http://localhost:8000/docs
 ```
 Without `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` the API silently uses `backend/data/inventory.json`.

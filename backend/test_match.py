@@ -171,3 +171,36 @@ def test_api_impact_summary():
         "item_id": "nope", "quantity": 1, "start_date": "2026-11-21",
         "end_date": "2026-11-23", "location": LARA}]})
     assert bad.status_code == 404
+
+
+def test_methodology_numbers_all_come_from_the_factors_file():
+    import json, re
+    from pathlib import Path
+    f = json.loads((Path(__file__).parent / "impact_factors.json").read_text(encoding="utf-8"))
+    r = client.get("/impact/methodology")
+    assert r.status_code == 200
+    m = r.json()
+    ids = {x["id"] for x in m["factors"]}
+    assert ids == {"transport", *[k for k in f["material_kgco2e_per_tonne_primary_production"] if not k.startswith("_")]}
+    for x in m["factors"]:
+        assert x["value"] is not None and x["source"] and x["status"] == "sourced"
+    uses = next(a for a in m["assumptions"] if a["id"] == "assumed_uses_per_new_item")
+    assert uses["status"] == "illustrative" and uses["value"] == f["counterfactual"]["assumed_uses_per_new_item"]["value"]
+    assert m["dataset"]["licence"] and m["dataset"]["url"].startswith("https://")
+    # every number written in the prose must be one of the configured values (no invented figures)
+    allowed = {str(f["counterfactual"]["assumed_uses_per_new_item"]["value"]),
+               str(f["counterfactual"]["transport_legs"]["value"]), "0"}
+    prose = " ".join([m["summary"], *m["formula"].values(), *m["not_counted"], *m["limitations"]])
+    assert set(re.findall(r"\d+", prose)) <= allowed, set(re.findall(r"\d+", prose)) - allowed
+
+
+def test_priority_presets():
+    base = req()
+    default = client.post("/match", json=base).json()
+    assert client.post("/match", json={**base, "priority": "balanced"}).json() == default   # unchanged
+    cheap = client.post("/match", json={**base, "priority": "cheapest"}).json()
+    assert cheap["matches"][0]["breakdown"]["weights"] == {"distance": 0.2, "condition": 0.2, "price": 0.6}
+    assert [m["item_id"] for m in cheap["matches"]] != [m["item_id"] for m in default["matches"]]
+    best = client.post("/match", json={**base, "priority": "best_condition"}).json()
+    assert all(m["condition"] == "excellent" for m in best["matches"][:2])
+    assert client.post("/match", json={**base, "priority": "greenest"}).status_code == 422

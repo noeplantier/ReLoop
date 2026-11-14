@@ -72,3 +72,58 @@ def estimate(item, quantity, factors, distance_km=None):
         },
         "assumptions": assumptions,
     }
+
+
+MATERIAL_LABELS = {"wood": "Wood", "metals": "Metals", "plastics_rigid": "Rigid plastics",
+                   "electrical_small": "Small electrical items", "electrical_large": "Large electrical items"}
+
+
+def methodology(factors):
+    """Everything a reader needs to check the carbon numbers. Every number comes from `factors`
+    (impact_factors.json); only the explanatory sentences live here."""
+    ds = factors["source_dataset"]
+    t = factors["transport_kgco2e_per_tonne_km"]
+    mats = factors["material_kgco2e_per_tonne_primary_production"]
+    cf = factors.get("counterfactual", {})
+    uses, legs = _cf(factors)
+    return {
+        "summary": ("Reusing an item avoids the emissions of making a new one. We estimate that from the item's "
+                    "weight and main material, subtract the emissions of moving it there and back, and give a "
+                    "range: an upper bound and a conservative bound."),
+        "formula": {
+            "upper": "weight (t) x quantity x material factor (kgCO2e/t) - transport",
+            "conservative": f"weight (t) x quantity x material factor / {uses} uses - transport",
+            "transport": f"transport factor (kgCO2e/t-km) x weight (t) x quantity x distance (km) x {legs} legs",
+            "floor": "Both bounds are floored at 0.",
+        },
+        "dataset": {k: ds[k] for k in ("name", "published", "url", "licence", "caveat") if k in ds},
+        "factors": [
+            {"id": "transport", "label": "Road freight, rigid diesel truck", "value": t["value"],
+             "unit": "kgCO2e per tonne-km", "status": t.get("status"), "source": t.get("source")},
+            *[{"id": k, "label": MATERIAL_LABELS.get(k, k), "value": v["value"],
+               "unit": "kgCO2e per tonne (primary production)", "status": v.get("status"),
+               "source": v.get("source")}
+              for k, v in mats.items() if not k.startswith("_")],
+        ],
+        "assumptions": [
+            {"id": k, "value": v.get("value"), "status": v.get("status"), "note": v.get("note")}
+            for k, v in cf.items() if not k.startswith("_")
+        ] + [
+            {"id": "item_weights_and_materials", "value": None, "status": "illustrative",
+             "note": "Each item's weight and main material are rough estimates for fictional demo data."},
+        ],
+        "status_labels": {
+            "sourced": "Every input is from a published source (no demo estimates).",
+            "illustrative": "At least one input is an estimate or an assumption: show as an estimate, never as a verified claim.",
+            "unavailable": "Weight, material or factor missing: no number is shown.",
+        },
+        "not_counted": ["Use phase (e.g. electricity for lights)", "End of life (disposal or recycling)",
+                        "Delivery of the new item that was not bought",
+                        "Empty truck runs: only the two loaded legs (delivery, then return of the items) are counted"],
+        "limitations": [
+            "UK factors are used as a proxy for Turkey.",
+            "Material factors are per tonne of material, not per finished product; manufacturing and packaging are not modelled separately.",
+            "The conservative bound depends on an assumed number of uses with no citable source.",
+            "All inventory in this prototype is fictional.",
+        ],
+    }
