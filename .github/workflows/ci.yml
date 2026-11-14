@@ -48,3 +48,22 @@ jobs:
         run: |
           npm ci
           npm test
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: hashFiles('frontend/package-lock.json') != ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+      - name: Type check + build
+        working-directory: frontend
+        run: npm run build
+      - name: Demo fixtures identical to the backend's, every demo example answered
+        working-directory: frontend
+        run: npm run check:fixtures

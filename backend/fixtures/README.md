@@ -11,3 +11,6 @@ when these files no longer match the engine, so they cannot silently drift.
 
 `meta.backend_commit` says which backend version produced them. To include `/parse-request` and
 `/explain` outputs (needs the `ai/` package), run `python tools/export_demo_fixtures.py --ai ..`.
+
+After regenerating, also update the web app's copy: `cd frontend && npm run sync:fixtures`. CI runs
+`npm run check:fixtures`, which fails if `frontend/src/demo/demo_scenarios.json` differs from this folder.
