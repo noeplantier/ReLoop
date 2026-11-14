@@ -63,18 +63,15 @@ def eligible(request, inventory, suppliers):
 
 
 def _price_scores(cands):
-    """Cheaper is better. Free (null price) = 1.0. Others scaled between cheapest and priciest."""
-    prices = [c["item"]["unit_price_per_day_try"] for c in cands
-              if c["item"]["unit_price_per_day_try"] is not None]
-    lo, hi = (min(prices), max(prices)) if prices else (0, 0)
-    res = []
-    for c in cands:
-        p = c["item"]["unit_price_per_day_try"]
-        if p is None or hi == lo:
-            res.append(1.0)
-        else:
-            res.append(1.0 - (p - lo) / (hi - lo))
-    return res
+    """Cheaper is better, scaled between the cheapest (1.0) and the priciest (0.0) candidate.
+    Free loans (null price) count as price 0, so a paid option never ties with a free one."""
+    prices = [c["item"]["unit_price_per_day_try"] or 0.0 for c in cands]
+    if not prices:
+        return []
+    lo, hi = min(prices), max(prices)
+    if hi == lo:
+        return [1.0] * len(prices)
+    return [1.0 - (p - lo) / (hi - lo) for p in prices]
 
 
 def rank(request, inventory, suppliers, top_n=TOP_N):

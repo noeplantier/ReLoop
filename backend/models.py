@@ -15,7 +15,7 @@ class Location(BaseModel):
 
 class Requirements(BaseModel):
     min_condition: Optional[Condition] = None
-    max_distance_km: Optional[float] = Field(default=None, gt=0)
+    max_distance_km: Optional[float] = Field(default=None, gt=0, le=1000)
 
 
 class MatchRequest(BaseModel):

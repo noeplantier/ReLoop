@@ -101,14 +101,15 @@ Response
 {
   "allocations": [ { "request_id": "R1", "lines": [ { "item_id": "...", "name": "...", "supplier": "...", "quantity": 150, "distance_km": 0.0 } ], "unmet": 0 } ],
   "comparison": {
-    "greedy": { "allocations": [ "..." ], "summary": { "covered_requests": 2, "total_requests": 3, "unmet_units": 20, "total_score": 371.9, "total_distance_km": 14.5 } },
-    "milp":   { "allocations": [ "..." ], "summary": { "covered_requests": 3, "total_requests": 3, "unmet_units": 0,  "total_score": 386.11, "total_distance_km": 7.7 } }
+    "greedy": { "allocations": [ "..." ], "summary": { "covered_requests": 2, "total_requests": 3, "unmet_units": 20, "total_score": 363.97, "total_distance_km": 14.5 } },
+    "milp":   { "allocations": [ "..." ], "summary": { "covered_requests": 3, "total_requests": 3, "unmet_units": 0,  "total_score": 377.32, "total_distance_km": 7.7 } }
   },
   "note": null
 }
 ```
 - Top-level `allocations` = the MILP plan (the one to show). `comparison` is for the "greedy vs optimised" slide.
 - Greedy = first come, first served in the order sent. MILP decides all requests together. Stock is shared per availability window.
+- `max_suppliers_per_request` counts suppliers (one pickup each), not item lines; `total_distance_km` counts one trip per (request, supplier).
 - `note` is set (and `milp` = `greedy`) only if the solver fails; the endpoint never breaks `/match`.
 - This is optimisation, not AI: say so in the pitch.
 

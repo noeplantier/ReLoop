@@ -1,8 +1,9 @@
 """Batch (greedy vs MILP) + robustness checks. Run from backend/:  python -m pytest -q"""
 import os
 
-os.environ.pop("SUPABASE_URL", None)
-os.environ.pop("SUPABASE_SERVICE_ROLE_KEY", None)
+# Empty (not removed) so a developer's backend/.env cannot switch the tests to the live database.
+os.environ["SUPABASE_URL"] = ""
+os.environ["SUPABASE_SERVICE_ROLE_KEY"] = ""
 
 from collections import defaultdict
 
@@ -40,7 +41,7 @@ def test_no_overbooking_and_supplier_limit():
         res = fn(SCENARIO, INV["items"], INV["suppliers"], max_suppliers=2)
         used = defaultdict(int)
         for a, r in zip(res["allocations"], SCENARIO):
-            assert len(a["lines"]) <= 2
+            assert len({l["supplier"] for l in a["lines"]}) <= 2
             assert sum(l["quantity"] for l in a["lines"]) + a["unmet"] == r["quantity"]
             for l in a["lines"]:
                 used[l["item_id"]] += l["quantity"]
@@ -123,3 +124,45 @@ def test_unexpected_error_hides_details(monkeypatch):
     monkeypatch.setattr(main, "load_inventory", lambda: (_ for _ in ()).throw(ValueError("secret path /x")))
     r = client.get("/categories")
     assert r.status_code == 500 and r.json() == {"error": "internal error"}
+
+
+# --- regression tests for review fixes ---
+
+def test_paid_option_never_ties_with_free_loan():
+    cands = [{"item": {"unit_price_per_day_try": None}}, {"item": {"unit_price_per_day_try": 12.0}}]
+    assert match._price_scores(cands) == [1.0, 0.0]
+    assert match._price_scores([{"item": {"unit_price_per_day_try": 5.0}}] * 2) == [1.0, 1.0]
+    assert match._price_scores([]) == []
+
+
+def test_supplier_limit_counts_suppliers_not_item_lines():
+    # R1 needs 200 chairs; the Lara hall alone has 150 + 120. With K=1 it must still be coverable.
+    reqs = [R(1, "chairs", 200, 21, 23, "Lara")]
+    for fn in (batch.greedy, batch.solve_milp):
+        a = fn(reqs, INV["items"], INV["suppliers"], max_suppliers=1)["allocations"][0]
+        assert a["unmet"] == 0 and len({l["supplier"] for l in a["lines"]}) == 1
+
+
+def test_distance_counted_once_per_supplier():
+    reqs = [{**R(1, "chairs", 200, 21, 23, "Lara"), "location": {"lat": 36.87, "lon": 30.83}}]  # near Lara
+    res = batch.greedy(reqs, INV["items"], INV["suppliers"], max_suppliers=1)
+    a = res["allocations"][0]
+    assert len(a["lines"]) == 2                      # two Lara items, one trip
+    assert len({l["supplier"] for l in a["lines"]}) == 1
+    assert res["summary"]["total_distance_km"] == a["lines"][0]["distance_km"] > 0
+
+
+def test_impact_summary_rejects_unavailable_selection():
+    top = client.post("/match", json={**R(1, "chairs", 50, 21, 23, "Lara")}).json()["matches"][0]
+    sel = {"item_id": top["item_id"], "quantity": 10 ** 4, "start_date": "2026-11-21",
+           "end_date": "2026-11-23", "location": {"lat": 36.85, "lon": 30.8}}
+    r = client.post("/impact/summary", json={"selections": [sel]})
+    assert r.status_code == 400 and "not available" in r.json()["error"]
+    r = client.post("/impact/summary", json={"selections": [{**sel, "quantity": 5, "start_date": "2027-01-01", "end_date": "2027-01-02"}]})
+    assert r.status_code == 400
+
+
+def test_tests_never_use_live_database():
+    import inventory
+    inventory._cache.update(t=0.0, data=None)
+    assert inventory.load_inventory(force_refresh=True)["source"] == "json_fallback"

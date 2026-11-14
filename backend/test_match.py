@@ -2,8 +2,9 @@
 Uses the offline JSON inventory (no Supabase, no network needed)."""
 import os
 
-os.environ.pop("SUPABASE_URL", None)
-os.environ.pop("SUPABASE_SERVICE_ROLE_KEY", None)
+# Empty (not removed) so a developer's backend/.env cannot switch the tests to the live database.
+os.environ["SUPABASE_URL"] = ""
+os.environ["SUPABASE_SERVICE_ROLE_KEY"] = ""
 
 from fastapi.testclient import TestClient
 

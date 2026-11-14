@@ -96,6 +96,10 @@ def impact_summary(req: SummaryRequest):
         it = by_id.get(s.item_id)
         if it is None:
             raise HTTPException(status_code=404, detail={"error": f"unknown item_id {s.item_id}"})
+        w = match.covering_window(it, s.start_date, s.end_date)
+        if w is None or s.quantity > w["quantity_available"] or it["reuse_mode"] not in match.MATCHABLE_MODES:
+            raise HTTPException(status_code=400, detail={
+                "error": f"item {s.item_id} is not available for {s.quantity} unit(s) on these dates"})
         sup = inv["suppliers"][it["supplier_id"]]
         km = match.haversine_km(s.location.lat, s.location.lon, sup["latitude"], sup["longitude"])
         days = (s.end_date - s.start_date).days + 1

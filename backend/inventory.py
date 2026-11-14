@@ -15,10 +15,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 log = logging.getLogger("reloop.inventory")
-load_dotenv()
+# Explicit path: backend/.env, whatever the working directory. Existing env vars win (override=False),
+# so tests and hosting platforms can force values.
+load_dotenv(Path(__file__).parent / ".env")
 
 FALLBACK = Path(__file__).parent / "data" / "inventory.json"
 CACHE_SECONDS = 30
+SUPABASE_TIMEOUT_S = 5
 _cache = {"t": 0.0, "data": None}
 
 
@@ -33,12 +36,13 @@ def _load_json():
 
 
 def _load_supabase():
-    from supabase import create_client   # imported lazily: not needed for the fallback
+    from supabase import ClientOptions, create_client   # lazy: not needed for the fallback
 
     url, key = os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
         raise RuntimeError("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set")
-    sb = create_client(url, key)
+    # Short timeout: if Supabase hangs, fall back to JSON quickly instead of freezing the demo.
+    sb = create_client(url, key, options=ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_S))
     sups = sb.table("suppliers").select("*").execute().data
     cats = sb.table("equipment_categories").select("*").execute().data
     rows = sb.table("inventory_items").select(

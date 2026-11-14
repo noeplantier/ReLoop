@@ -24,6 +24,8 @@ Result on the current seed (reproduced by `test_batch.py::test_milp_covers_what_
 | Greedy (first come, first served) | 2 of 3 | 20 | 14.5 km |
 | MILP (all requests together) | 3 of 3 | 0 | 7.7 km |
 
-Why: greedy serves R1 first and uses the Lara hall's 150 stackable plus 50 of its 120 folding chairs, leaving only 70 folding chairs. R2 then gets 60 (Konyaalti) + 70 (Lara) = 130 and is 20 short. MILP gives R2 90 plastic chairs from Kepez + 60 from Konyaalti, so everyone is covered.
+Why: greedy serves R1 first and uses the Lara hall's 150 stackable plus 50 of its 120 folding chairs, leaving only 70 folding chairs. R2 then gets 60 (Konyaalti) + 70 (Lara) = 130 and hits its 2-supplier limit, 20 short. MILP gives R2 60 chairs from Konyaalti + 90 from the Kepez depot (65 plastic stacking chairs and 25 bar stools, one pickup), so everyone is covered.
+
+Note: the plan includes bar stools because they are in the `chairs` category. If that looks odd in the demo, filter by item type or tune the seed.
 
 Honest limits for the pitch: one constructed scenario on fictional data; greedy is a deliberately simple baseline (a smarter heuristic could do better); with abundant stock both give the same plan. The point is that shared stock needs a global decision, not that greedy is always bad.
