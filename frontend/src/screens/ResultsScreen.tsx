@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Icon } from "../components/Icon";
 import { Steps } from "../components/Steps";
 import type { Category, Explanation, InventorySource, MatchOut, MatchResponse, Need } from "../lib/types";
+import { co2Range } from "../demo/engine";
 
 export interface NeedResult {
   need: Need;
@@ -128,18 +129,20 @@ function NeedSection({ r }: { r: NeedResult }) {
       <div className="cards">
         {matches.map((m, i) => (
           <OptionCard key={m.item_id} m={m} need={need} rank={i} days={r.response!.days}
-            exp={r.explanations?.[m.item_id]} explaining={r.explaining} explainNote={r.explainNote} />
+            exp={r.explanations?.[m.item_id]} explaining={r.explaining} explainNote={r.explainNote}
+            costNote={r.response!.cost_note} />
         ))}
       </div>
     </section>
   );
 }
 
-function OptionCard({ m, need, rank, days, exp, explaining, explainNote }: {
+function OptionCard({ m, need, rank, days, exp, explaining, explainNote, costNote }: {
   m: MatchOut; need: Need; rank: number; days: number; exp?: Explanation; explaining?: boolean; explainNote?: string;
+  costNote?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const missing = need.quantity - m.quoted_quantity;
+  const missing = m.missing_quantity ?? need.quantity - m.quoted_quantity;
   const tag = !m.covers_quantity ? { t: "Partial match", c: "tag--warn" } : rank === 0 ? { t: "Best match", c: "tag--best" } : null;
 
   return (
@@ -173,8 +176,8 @@ function OptionCard({ m, need, rank, days, exp, explaining, explainNote }: {
         ) : (
           <span className="opt__per">No rental price listed ({m.reuse_mode})</span>
         )}
-        <span className="opt__excl">
-          <Icon name="info" size={14} /> Delivery and deposit not included
+        <span className="opt__excl" title={costNote}>
+          <Icon name="info" size={14} /> Rental only: delivery, deposit, setup and taxes not included
         </span>
       </div>
 
@@ -216,10 +219,17 @@ function OptionCard({ m, need, rank, days, exp, explaining, explainNote }: {
             <div>
               <p className="impact__h">Climate impact</p>
               {m.impact.avoided_kgco2e != null ? (
-                <p>
-                  {m.impact.status === "illustrative" ? "Illustrative estimate" : "Estimate"}: about{" "}
-                  <b>{Math.round(m.impact.avoided_kgco2e).toLocaleString("en-US")} kgCO2e</b> avoided compared with buying new.
-                </p>
+                <>
+                  <p>
+                    {m.impact.status === "illustrative" ? "Illustrative estimate" : "Estimate"}:{" "}
+                    <b>{co2Range(m.impact)} kgCO2e</b> avoided compared with buying new.
+                  </p>
+                  {m.impact.basis && m.impact.avoided_kgco2e_conservative != null && (
+                    <p className="impact__basis">
+                      Low end: {m.impact.basis.conservative} High end: {m.impact.basis.upper}
+                    </p>
+                  )}
+                </>
               ) : (
                 <p>Not enough data to estimate the impact of this item.</p>
               )}

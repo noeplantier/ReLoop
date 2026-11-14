@@ -44,5 +44,19 @@
       "source": "DESNZ/Defra 2025, Material use > Electrical items > Electrical items - small, Primary material production, tonnes",
       "status": "sourced"
     }
+  },
+  "counterfactual": {
+    "_note": "Two bounds for avoided emissions. UPPER: without ReLoop the organiser buys new items for this event alone, so all production emissions are avoided. CONSERVATIVE: the new items would have been used for several events, so this event is credited only with its share of production emissions.",
+    "assumed_uses_per_new_item": {
+      "value": 10,
+      "status": "illustrative",
+      "source": null,
+      "note": "ASSUMPTION, not sourced: a new item bought for this event would serve 10 events in its life. No citable figure was found for event-equipment reuse cycles (checked 14 Nov 2026: only vendor lifespan claims in years). Change it here; every result recomputes."
+    },
+    "transport_legs": {
+      "value": 2,
+      "status": "assumption",
+      "note": "Modelling choice: delivery to the event plus return to the supplier (the empty truck's return is not counted). The per tonne-km factor itself is sourced."
+    }
   }
 }

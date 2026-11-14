@@ -69,7 +69,9 @@ class SupplierFacts(BaseModel):
 
 
 class ImpactFacts(BaseModel):
-    avoided_kgco2e: Optional[float] = None
+    avoided_kgco2e: Optional[float] = None                 # upper bound
+    avoided_kgco2e_conservative: Optional[float] = None    # conservative bound (illustrative assumption)
+    transport_kgco2e: Optional[float] = None
     status: Literal["sourced", "illustrative", "unavailable"]
     assumptions: list[str] = []
 
@@ -102,7 +104,8 @@ class Explanation(BaseModel):
     summary: str
     reasons: list[str]
     things_to_check: list[str]
-    avoided_kgco2e: Optional[float]        # copied from the engine, never generated
+    avoided_kgco2e: Optional[float]        # copied from the engine, never generated (upper bound)
+    avoided_kgco2e_conservative: Optional[float] = None
     impact_status: Literal["sourced", "illustrative", "unavailable"]
     source: Literal["llm", "template"]
 

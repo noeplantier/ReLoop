@@ -91,10 +91,6 @@ export default function App() {
     const update = (i: number, patch: Partial<NeedResult>) =>
       id === runId.current && setResults((prev) => prev.map((x, j) => (j === i ? { ...x, ...patch } : x)));
 
-    if (m === "live") {
-      api.health().then((h) => id === runId.current && setSource(h.inventory_source)).catch(() => undefined);
-    }
-
     await Promise.all(reqs.map(async (req, i) => {
       const need = r.needs[i];
       let response;
@@ -105,6 +101,8 @@ export default function App() {
         return;
       }
       update(i, { status: "ok", response, explaining: response.matches.length > 0 });
+      // /match says where its data came from (live database or the offline fictional dataset).
+      if (id === runId.current && response.inventory_source) setSource(response.inventory_source);
       if (!response.matches.length) return;
       let exps: Explanation[];
       let explainNote: string | undefined;

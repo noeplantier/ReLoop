@@ -36,7 +36,8 @@ def match(**over):
         "breakdown": {"distance_score": 1.0, "condition_score": 1.0, "price_score": 0.6,
                       "weights": {"distance": 0.5, "condition": 0.3, "price": 0.2}},
         "explanation": None,
-        "impact": {"avoided_kgco2e": 956.02, "status": "illustrative", "assumptions": ["..."]},
+        "impact": {"avoided_kgco2e": 956.02, "avoided_kgco2e_conservative": 95.6, "transport_kgco2e": 0.0,
+                   "status": "illustrative", "assumptions": ["..."]},
     }
     m.update(over)
     return m

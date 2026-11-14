@@ -15,8 +15,9 @@ def test_template_full_match_uses_only_engine_numbers():
     assert out.explainer == "template" and e.source == "template"
     text = " ".join([e.summary, *e.reasons])
     assert "all 50 chairs" in text and "1,800 TRY" in text and "3 days" in text
-    assert "Illustrative estimate" in text and "956 kgCO2e" in text
-    assert e.avoided_kgco2e == 956.02 and e.impact_status == "illustrative"
+    assert "Illustrative estimate" in text and "95.6–956 kgCO2e" in text
+    assert e.avoided_kgco2e == 956.02 and e.avoided_kgco2e_conservative == 95.6
+    assert e.impact_status == "illustrative"
     assert check_grounded(text, MatchFacts(**match()), ExplainRequestCtx(**REQ))
 
 
@@ -39,8 +40,10 @@ def test_grounding_rejects_invented_numbers_and_claims():
     m, r = MatchFacts(**match()), ExplainRequestCtx(**REQ)
     assert check_grounded("Covers all 50 chairs at 1,800 TRY, 0.0 km away.", m, r)
     assert not check_grounded("Saves you 2,500 TRY compared with buying.", m, r)
-    assert not check_grounded("Avoids 956 kgCO2e.", m, r)                     # not framed as estimate
-    assert check_grounded("An illustrative estimate of 956 kgCO2e avoided.", m, r)
+    assert not check_grounded("Avoids 95.6–956 kgCO2e.", m, r)                # not framed as estimate
+    assert not check_grounded("An illustrative estimate of 956 kgCO2e avoided.", m, r)  # upper bound alone
+    assert check_grounded("An illustrative estimate of 95.6–956 kgCO2e avoided.", m, r)
+    assert check_grounded("An illustrative estimate of 96 to 956 kgCO2e avoided.", m, r)
     assert not check_grounded("Verified supplier with 50 chairs.", m, r)
 
 

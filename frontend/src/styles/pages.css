@@ -715,3 +715,8 @@
     background-position: -200% 0;
   }
 }
+
+.impact__basis {
+  font-size: 0.8rem;
+  color: var(--text-2);
+}

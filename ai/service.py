@@ -6,6 +6,7 @@ from . import llm
 from .explain import check_grounded, template_explanation, things_to_check
 from .presets import find_preset
 from .rules import finish, parse_rules
+from .rules import numbers_in_text as rules_numbers_in_text
 from .schemas import (ExplainIn, ExplainOut, Explanation, Need, ParsedLocation,
                       ParsedRequirements, ParseOut)
 
@@ -70,7 +71,7 @@ def _llm_parse(text: str, today: date) -> ParseOut | None:
     data = llm.call_json(PARSE_SYSTEM, {"today": today.isoformat(), "text": text}, PARSE_SCHEMA)
     if data is None:
         return None
-    numbers_in_text = set(re.findall(r"\d+", text))
+    numbers_in_text = rules_numbers_in_text(text)   # digits or written-out ("fifty")
     needs: dict[str, Need] = {}
     for n in data.get("needs", []):
         q = n.get("quantity")
@@ -120,7 +121,8 @@ Hard rules:
   except that "missing_units" is given to you already.
 - If covers_quantity is false, say clearly that it is a partial match and how many units are missing.
 - Costs are estimates in TRY and exclude delivery and deposit; say "estimated".
-- Only mention CO2 if avoided_kgco2e is not null, and always call it an estimate
+- Only mention CO2 if avoided_kgco2e is not null. If avoided_kgco2e_conservative is also given, state it as a
+  range "conservative–upper" (never the upper number alone). Always call it an estimate
   ("illustrative estimate" when impact_status is "illustrative").
 - No marketing language, no promises, never say "guaranteed", "verified" or "certified".
 Return one entry per option, with the same item_id."""
@@ -154,7 +156,9 @@ def _facts(inp: ExplainIn) -> dict:
             "available_quantity": m.available_quantity, "quoted_quantity": m.quoted_quantity,
             "covers_quantity": m.covers_quantity, "missing_units": r.quantity - m.quoted_quantity,
             "distance_km": m.distance_km, "estimated_cost_try": m.estimated_cost_try,
-            "avoided_kgco2e": m.impact.avoided_kgco2e, "impact_status": m.impact.status,
+            "avoided_kgco2e": m.impact.avoided_kgco2e,
+            "avoided_kgco2e_conservative": m.impact.avoided_kgco2e_conservative,
+            "impact_status": m.impact.status,
         } for m in inp.matches],
     }
 
@@ -182,6 +186,7 @@ def explain(inp: ExplainIn) -> ExplainOut:
                 out.append(Explanation(item_id=m.item_id, summary=summary, reasons=reasons,
                                        things_to_check=things_to_check(m, inp.request),
                                        avoided_kgco2e=m.impact.avoided_kgco2e,
+                                       avoided_kgco2e_conservative=m.impact.avoided_kgco2e_conservative,
                                        impact_status=m.impact.status, source="llm"))
                 used_llm = True
                 continue

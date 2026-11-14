@@ -42,6 +42,18 @@ export interface MatchRequest {
   end_date: string;
   location: { lat: number; lon: number };
   requirements?: { min_condition?: Condition | null; max_distance_km?: number | null } | null;
+  priority?: Priority | null;
+}
+
+export type Priority = "balanced" | "closest" | "cheapest" | "best_condition";
+
+export interface Impact {
+  avoided_kgco2e: number | null; // upper bound: new items bought for this event alone
+  avoided_kgco2e_conservative?: number | null; // production shared over assumed uses (illustrative)
+  transport_kgco2e?: number | null; // round trip, already deducted from both bounds
+  status: ImpactStatus;
+  basis?: { upper: string; conservative: string } | null;
+  assumptions: string[];
 }
 
 export interface MatchOut {
@@ -52,6 +64,7 @@ export interface MatchOut {
   condition: string;
   available_quantity: number;
   quoted_quantity: number;
+  missing_quantity: number;
   covers_quantity: boolean;
   distance_km: number;
   unit_price_per_day_try: number | null;
@@ -59,7 +72,7 @@ export interface MatchOut {
   score: number;
   breakdown: Record<string, unknown>;
   explanation: string | null;
-  impact: { avoided_kgco2e: number | null; status: ImpactStatus; assumptions: string[] };
+  impact: Impact;
 }
 
 export interface MatchResponse {
@@ -68,6 +81,8 @@ export interface MatchResponse {
   total_options: number;
   matches: MatchOut[];
   suggestions: { type: string; detail: string }[];
+  inventory_source?: InventorySource; // older backends omit it
+  cost_note?: string;
 }
 
 export interface Explanation {
@@ -76,6 +91,7 @@ export interface Explanation {
   reasons: string[];
   things_to_check: string[];
   avoided_kgco2e: number | null;
+  avoided_kgco2e_conservative?: number | null;
   impact_status: ImpactStatus;
   source: "llm" | "template";
 }
