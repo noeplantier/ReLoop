@@ -171,7 +171,7 @@ def test_tests_never_use_live_database():
 def test_match_reports_source_missing_quantity_and_cost_note():
     # Noé's demo request: 50 chairs near Lara, 21-23 Nov
     r = client.post("/match", json=R(1, "chairs", 50, 21, 23, "Lara")).json()
-    assert r["data_source"] == "json_fallback"          # tests never touch the live database
+    assert r["inventory_source"] == "json_fallback"          # tests never touch the live database
     assert "Delivery" in r["cost_note"] and "not included" in r["cost_note"]
     assert all(m["missing_quantity"] == 0 and m["covers_quantity"] for m in r["matches"])
     # more than any single item holds: every option is partial and says how much is missing

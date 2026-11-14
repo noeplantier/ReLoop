@@ -74,7 +74,7 @@ def post_match(req: MatchRequest):
         m.pop("category")
     sugg = match.suggestions(r, inv["items"], inv["suppliers"], total)
     return {"request_id": req.request_id, "days": days, "total_options": total,
-            "matches": top, "suggestions": sugg, "data_source": inv["source"],
+            "matches": top, "suggestions": sugg, "inventory_source": inv["source"],
             "cost_note": COST_NOTE}
 
 

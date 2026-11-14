@@ -69,7 +69,7 @@ def main():
         check(code == 200, f"/match {cat} x{qty}: HTTP {code} in {dt:.2f}s")
         if code != 200:
             continue
-        check(r.get("data_source") == source, f"  data_source = {r.get('data_source')} (health says {source})")
+        check(r.get("inventory_source") == source, f"  inventory_source = {r.get('inventory_source')} (health says {source})")
         check(bool(r.get("cost_note")), f"  cost_note present")
         check(len(r["matches"]) >= 1, f"  {len(r['matches'])} option(s) shown of {r['total_options']} eligible")
         for m in r["matches"]:

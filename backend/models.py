@@ -72,7 +72,7 @@ class Suggestion(BaseModel):
     detail: str
 
 
-DataSource = Literal["supabase", "json_fallback"]
+InventorySource = Literal["supabase", "json_fallback"]
 
 
 class MatchResponse(BaseModel):
@@ -81,7 +81,7 @@ class MatchResponse(BaseModel):
     total_options: int
     matches: list[MatchOut]
     suggestions: list[Suggestion]
-    data_source: DataSource        # live database or the offline fictional dataset
+    inventory_source: InventorySource        # live database or the offline fictional dataset
     cost_note: str                 # what estimated_cost_try does NOT include
 
 
