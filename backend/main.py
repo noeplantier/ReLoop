@@ -136,7 +136,7 @@ def post_match_batch(req: BatchRequest):
 def impact_summary(req: SummaryRequest):
     inv = load_inventory()
     by_id = {i["id"]: i for i in inv["items"]}
-    units, dist, cost, avoided = 0, 0.0, 0.0, 0.0
+    units, dist, cost, avoided, avoided_low, transport = 0, 0.0, 0.0, 0.0, 0.0, 0.0
     any_cost = False
     statuses, assumptions, any_avoided = [], [], False
     for s in req.selections:
@@ -162,6 +162,8 @@ def impact_summary(req: SummaryRequest):
                 assumptions.append(a)
         if e["avoided_kgco2e"] is not None:
             avoided += e["avoided_kgco2e"]
+            avoided_low += e["avoided_kgco2e_conservative"]
+            transport += e["transport_kgco2e"] or 0.0
             any_avoided = True
     # Weakest evidence wins: one illustrative or unavailable line makes the whole total so.
     status = ("unavailable" if "unavailable" in statuses
@@ -169,5 +171,7 @@ def impact_summary(req: SummaryRequest):
     return {"reused_units": units, "total_distance_km": round(dist, 1),
             "estimated_cost_try": round(cost, 2) if any_cost else None,
             "avoided_kgco2e": round(avoided, 2) if any_avoided and status != "unavailable" else None,
+            "avoided_kgco2e_conservative": round(avoided_low, 2) if any_avoided and status != "unavailable" else None,
+            "transport_kgco2e": round(transport, 2) if any_avoided and status != "unavailable" else None,
             "impact_status": status, "assumptions": assumptions,
             "inventory_source": inv["source"]}

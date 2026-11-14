@@ -19,12 +19,15 @@ optimiser that shares scarce equipment fairly between several events.
 - Demo scenario (3 events, 450 chairs, fictional data): first-come-first-served leaves 20 chairs
   unmet; the optimiser covers all 3 events and cuts total pickup distance from 14.5 km to 7.7 km.
   Say: "in our demo scenario". Do not say "always" or "X% better in general".
-- CO2: e.g. reusing 50 metal banquet chairs 10 km away is ESTIMATED to avoid about 955 kgCO2e
-  (making 250 kg of new metal at 3,824 kgCO2e/t, minus about 0.5 kgCO2e of delivery). Say
+- CO2 is a RANGE: e.g. reusing 50 metal banquet chairs 10 km away is ESTIMATED to avoid about
+  95–955 kgCO2e. Upper: making 250 kg of new metal at 3,824 kgCO2e/t, minus ~1 kgCO2e of delivery
+  and return. Conservative: that new metal would have served ~10 events (our ASSUMPTION, no source
+  found), so this event gets 1/10. Demo request (50 chairs + 2 stage lights, top option each):
+  about 99–990 kgCO2e. Say
   "estimated", "illustrative", "based on assumed weights". Never "measured" or "saved".
 - Robustness: small changes to the scoring weights keep the first recommendation in about 94% of
   test cases (docs/SCORING.md).
-- Tests: 37 automated backend tests + 31 database checks.
+- Tests: 38 automated backend tests + 31 database checks.
 
 ## AI vs not-AI (judges score "AI integration" and "awareness of limitations")
 - AI (Sueda's layer): understanding free-text requests, writing grounded explanations.

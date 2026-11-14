@@ -64,8 +64,11 @@ Response
       "explanation": null,
       "impact": {
         "avoided_kgco2e": 956.02,
+        "avoided_kgco2e_conservative": 95.6,
+        "transport_kgco2e": 0.0,
         "status": "illustrative",
-        "assumptions": ["Avoided: producing 50 new unit(s) of metals, about 5.0 kg each = 0.250 t x 3824.09335 kgCO2e/t = 956.0 kgCO2e.", "Factor source: DESNZ/Defra 2025, ...", "Item weight and material are rough estimates for demo data."]
+        "basis": { "upper": "New items bought for this event alone.", "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)." },
+        "assumptions": ["Upper bound: producing 50 new unit(s) of metals, about 5.0 kg each = 0.250 t x 3824.09335 kgCO2e/t = 956.0 kgCO2e is avoided.", "Factor source: DESNZ/Defra 2025, ...", "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), ...", "..."]
       }
     }
   ],
@@ -80,7 +83,7 @@ Response
 - `matches` holds up to 3 options; fewer when fewer are feasible. A multi-item request ("50 chairs and 2 stage lights") = one `/match` call per category.
 - Added 14 Nov (additive, nothing renamed): `missing_quantity`, `inventory_source`, `cost_note`.
 - `explanation` is filled by the AI layer (Sueda) using ONLY `breakdown`, `distance_km`, `condition`. Backend returns `null`.
-- `impact.avoided_kgco2e` = kgCO2e of producing the NEW items we avoid (weight x DEFRA 2025 material factor) minus delivery emissions. `impact.status`: `"sourced"` (real weights), `"illustrative"` (weights/materials are demo estimates: the UI MUST label it "estimate", never a verified claim) or `"unavailable"` (data missing, `avoided_kgco2e` is `null`). `assumptions` lists the calculation in plain text, show it on demand.
+- Carbon is a RANGE (added 14 Nov, additive). `impact.avoided_kgco2e` = UPPER bound: producing the NEW items we avoid (weight x DEFRA 2025 material factor), as if they were bought for this event alone. `impact.avoided_kgco2e_conservative` = the same production shared over the uses a new item would get (`assumed_uses_per_new_item` in `impact_factors.json`, currently 10, an ASSUMPTION), so it is always illustrative. Both have `impact.transport_kgco2e` (delivery AND return, sourced factor) deducted and are floored at 0. `impact.basis` gives one line per bound. UI: show "Estimated 96–956 kg CO2e avoided (illustrative)", with assumptions on demand; never rank options by CO2 (heavier items would win). `impact.status`: `"sourced"` (real weights), `"illustrative"` (weights/materials are demo estimates: the UI MUST label it "estimate", never a verified claim) or `"unavailable"` (data missing, `avoided_kgco2e` is `null`). `assumptions` lists the calculation in plain text, show it on demand.
 - `suggestions` (what-if, later): `{ "type": "shift_date", "detail": "Starting 1 day later adds 2 options" }`.
 - Empty `matches` is a valid 200 response.
 
@@ -94,6 +97,8 @@ Response
   "total_distance_km": 12.4,
   "estimated_cost_try": 1800.0,
   "avoided_kgco2e": 956.02,
+  "avoided_kgco2e_conservative": 95.6,
+  "transport_kgco2e": 0.0,
   "impact_status": "illustrative",
   "assumptions": ["..."],
   "inventory_source": "supabase"

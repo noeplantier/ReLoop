@@ -43,8 +43,11 @@ class SupplierOut(BaseModel):
 
 
 class Impact(BaseModel):
-    avoided_kgco2e: Optional[float]
+    avoided_kgco2e: Optional[float]                    # UPPER bound: new items bought for this event alone
+    avoided_kgco2e_conservative: Optional[float] = None  # production shared over assumed uses (illustrative)
+    transport_kgco2e: Optional[float] = None           # round trip, already deducted from both bounds
     status: Literal["sourced", "illustrative", "unavailable"]
+    basis: Optional[dict] = None                       # one-line meaning of each bound
     assumptions: list[str]
 
 
@@ -102,6 +105,8 @@ class SummaryResponse(BaseModel):
     total_distance_km: float
     estimated_cost_try: Optional[float]
     avoided_kgco2e: Optional[float]
+    avoided_kgco2e_conservative: Optional[float] = None
+    transport_kgco2e: Optional[float] = None
     impact_status: Literal["sourced", "illustrative", "unavailable"]
     assumptions: list[str]
     inventory_source: InventorySource
