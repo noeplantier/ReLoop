@@ -13,6 +13,14 @@ CONDITION_RANK = {"fair": 0, "good": 1, "excellent": 2}
 CONDITION_SCORE = {"fair": 0.4, "good": 0.7, "excellent": 1.0}
 MATCHABLE_MODES = ("loan", "rental")   # donation/resale are stored but not quoted in the MVP
 WEIGHTS = {"distance": 0.5, "condition": 0.3, "price": 0.2}   # placeholders, tune with the team
+# Organiser-chosen priorities (request.priority). Design choices, not learned from data; the weights
+# used are always returned in `breakdown.weights`, so every score stays explainable.
+PRIORITY_WEIGHTS = {
+    "balanced": WEIGHTS,
+    "closest": {"distance": 0.8, "condition": 0.1, "price": 0.1},
+    "cheapest": {"distance": 0.2, "condition": 0.2, "price": 0.6},
+    "best_condition": {"distance": 0.2, "condition": 0.6, "price": 0.2},
+}
 DISTANCE_SCALE_KM = 50.0
 TOP_N = 3
 
@@ -79,13 +87,13 @@ def rank(request, inventory, suppliers, top_n=TOP_N):
     pscores = _price_scores(cands)
     days = (_d(request["end_date"]) - _d(request["start_date"])).days + 1
     qty = request["quantity"]
+    wts = PRIORITY_WEIGHTS[request.get("priority") or "balanced"]
     rows = []
     for c, ps in zip(cands, pscores):
         it, w = c["item"], c["window"]
         dist_s = math.exp(-c["distance_km"] / DISTANCE_SCALE_KM)
         cond_s = CONDITION_SCORE[it["condition"]]
-        score = (WEIGHTS["distance"] * dist_s + WEIGHTS["condition"] * cond_s
-                 + WEIGHTS["price"] * ps)
+        score = wts["distance"] * dist_s + wts["condition"] * cond_s + wts["price"] * ps
         quoted = min(qty, w["quantity_available"])
         price = it["unit_price_per_day_try"]
         rows.append({
@@ -98,13 +106,14 @@ def rank(request, inventory, suppliers, top_n=TOP_N):
             "condition": it["condition"],
             "available_quantity": w["quantity_available"],
             "quoted_quantity": quoted,
+            "missing_quantity": qty - quoted,
             "covers_quantity": w["quantity_available"] >= qty,
             "distance_km": round(c["distance_km"], 1),
             "unit_price_per_day_try": price,
             "estimated_cost_try": None if not price else round(price * quoted * days, 2),
             "score": round(score, 3),
             "breakdown": {"distance_score": round(dist_s, 3), "condition_score": cond_s,
-                          "price_score": round(ps, 3), "weights": dict(WEIGHTS)},
+                          "price_score": round(ps, 3), "weights": dict(wts)},
             "explanation": None,
             # internal: which stock window was used (the batch solver shares stock per window)
             "window_key": [w["available_from"], w["available_until"]],

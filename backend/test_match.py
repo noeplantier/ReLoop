@@ -5,6 +5,9 @@ import os
 # Empty (not removed) so a developer's backend/.env cannot switch the tests to the live database.
 os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = ""
+os.environ["DATABASE_URL"] = ""
+# Tests send hundreds of requests from one client: lift the public request limits (tested separately).
+os.environ.update(RATE_LIMIT_PER_MIN="1000000", HEAVY_RATE_LIMIT_PER_MIN="1000000", AI_RATE_LIMIT_PER_MIN="1000000", AI_DAILY_LIMIT="1000000")
 
 from fastapi.testclient import TestClient
 
@@ -87,7 +90,12 @@ client = TestClient(app)
 
 
 def test_api_health_uses_fallback():
-    assert client.get("/health").json() == {"status": "ok", "inventory_source": "json_fallback"}
+    h = client.get("/health").json()
+    assert h["status"] == "ok" and h["inventory_source"] == "json_fallback"
+    # additive fields (14 Nov): age of the loaded copy, AI layer state, deployed commit
+    assert isinstance(h["inventory_age_s"], float) and h["inventory_age_s"] >= 0
+    assert isinstance(h["ai_layer"], bool) and h["llm_enabled"] is False
+    assert "commit" in h
 
 
 def test_api_match_contract_and_no_invented_impact():
@@ -114,11 +122,35 @@ def test_impact_hand_calculation():
     f = json.loads((Path(__file__).parent / "impact_factors.json").read_text(encoding="utf-8"))
     item = {"weight_kg": 5.0, "main_material": "metals", "weight_is_estimate": True}
     e = impact.estimate(item, 50, f, distance_km=10)
-    # embodied = 0.25 t x 3824.09335 = 956.0233 ; transport = 0.19748 x 0.25 x 10 = 0.4937
-    assert e["avoided_kgco2e"] == 955.53 and e["status"] == "illustrative"
-    assert impact.estimate({"weight_kg": None, "main_material": None}, 5, f)["status"] == "unavailable"
+    # embodied = 0.25 t x 3824.09335 = 956.0233
+    # transport (there and back) = 0.19748 x 0.25 t x 10 km x 2 = 0.9874
+    # upper = 956.0233 - 0.9874 = 955.0359 ; conservative = 956.0233 / 10 uses - 0.9874 = 94.6149
+    assert e["avoided_kgco2e"] == 955.04 and e["status"] == "illustrative"
+    assert e["avoided_kgco2e_conservative"] == 94.61 and e["transport_kgco2e"] == 0.99
+    assert e["basis"]["upper"] and "assumption" in e["basis"]["conservative"]
+    assert any("ASSUMPTION" in a for a in e["assumptions"])           # never hidden
+    missing = impact.estimate({"weight_kg": None, "main_material": None}, 5, f)
+    assert missing["status"] == "unavailable" and missing["avoided_kgco2e_conservative"] is None
     real = impact.estimate({**item, "weight_is_estimate": False}, 50, f, distance_km=10)
     assert real["status"] == "sourced"
+
+
+def test_impact_conservative_floors_at_zero_and_follows_the_assumption():
+    import json
+    from pathlib import Path
+    import impact
+    f = json.loads((Path(__file__).parent / "impact_factors.json").read_text(encoding="utf-8"))
+    # light wooden item far away: 0.01 t x 269.50416 = 2.695 ; /10 = 0.2695 ; transport = 0.39496
+    far = impact.estimate({"weight_kg": 10.0, "main_material": "wood"}, 1, f, distance_km=100)
+    assert far["avoided_kgco2e_conservative"] == 0.0 and far["avoided_kgco2e"] == 2.3
+    # the range is driven only by the JSON assumption: 1 use -> both bounds equal
+    one = json.loads(json.dumps(f))
+    one["counterfactual"]["assumed_uses_per_new_item"]["value"] = 1
+    e = impact.estimate({"weight_kg": 5.0, "main_material": "metals"}, 50, one, distance_km=10)
+    assert e["avoided_kgco2e"] == e["avoided_kgco2e_conservative"] == 955.04
+    # no distance -> nothing deducted, transport reported as unknown
+    nd = impact.estimate({"weight_kg": 5.0, "main_material": "metals"}, 50, f)
+    assert nd["transport_kgco2e"] is None and nd["avoided_kgco2e"] == 956.02
 
 
 def test_api_empty_result_is_200():
@@ -134,7 +166,43 @@ def test_api_impact_summary():
     assert r.status_code == 200
     j = r.json()
     assert j["reused_units"] == 50 and j["impact_status"] == "illustrative" and j["avoided_kgco2e"] > 0
+    assert 0 <= j["avoided_kgco2e_conservative"] < j["avoided_kgco2e"]          # a real range
+    assert j["avoided_kgco2e"] == top["impact"]["avoided_kgco2e"]                 # summary = sum of lines
+    assert j["avoided_kgco2e_conservative"] == top["impact"]["avoided_kgco2e_conservative"]
     bad = client.post("/impact/summary", json={"selections": [{
         "item_id": "nope", "quantity": 1, "start_date": "2026-11-21",
         "end_date": "2026-11-23", "location": LARA}]})
     assert bad.status_code == 404
+
+
+def test_methodology_numbers_all_come_from_the_factors_file():
+    import json, re
+    from pathlib import Path
+    f = json.loads((Path(__file__).parent / "impact_factors.json").read_text(encoding="utf-8"))
+    r = client.get("/impact/methodology")
+    assert r.status_code == 200
+    m = r.json()
+    ids = {x["id"] for x in m["factors"]}
+    assert ids == {"transport", *[k for k in f["material_kgco2e_per_tonne_primary_production"] if not k.startswith("_")]}
+    for x in m["factors"]:
+        assert x["value"] is not None and x["source"] and x["status"] == "sourced"
+    uses = next(a for a in m["assumptions"] if a["id"] == "assumed_uses_per_new_item")
+    assert uses["status"] == "illustrative" and uses["value"] == f["counterfactual"]["assumed_uses_per_new_item"]["value"]
+    assert m["dataset"]["licence"] and m["dataset"]["url"].startswith("https://")
+    # every number written in the prose must be one of the configured values (no invented figures)
+    allowed = {str(f["counterfactual"]["assumed_uses_per_new_item"]["value"]),
+               str(f["counterfactual"]["transport_legs"]["value"]), "0"}
+    prose = " ".join([m["summary"], *m["formula"].values(), *m["not_counted"], *m["limitations"]])
+    assert set(re.findall(r"\d+", prose)) <= allowed, set(re.findall(r"\d+", prose)) - allowed
+
+
+def test_priority_presets():
+    base = req()
+    default = client.post("/match", json=base).json()
+    assert client.post("/match", json={**base, "priority": "balanced"}).json() == default   # unchanged
+    cheap = client.post("/match", json={**base, "priority": "cheapest"}).json()
+    assert cheap["matches"][0]["breakdown"]["weights"] == {"distance": 0.2, "condition": 0.2, "price": 0.6}
+    assert [m["item_id"] for m in cheap["matches"]] != [m["item_id"] for m in default["matches"]]
+    best = client.post("/match", json={**base, "priority": "best_condition"}).json()
+    assert all(m["condition"] == "excellent" for m in best["matches"][:2])
+    assert client.post("/match", json={**base, "priority": "greenest"}).status_code == 422

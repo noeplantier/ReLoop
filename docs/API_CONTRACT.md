@@ -5,7 +5,11 @@ Base URL: `http://localhost:8000` (dev), public URL after deploy. JSON only. Dat
 All demo inventory is fictional. The mobile/web client never talks to Supabase; it only calls this API.
 
 ## GET /health
-`{ "status": "ok", "inventory_source": "supabase" | "json_fallback" }`
+`{ "status": "ok", "inventory_source": "supabase" | "json_fallback", "inventory_age_s": 12.3, "ai_layer": true, "llm_enabled": false, "commit": "00c802a" }`
+- `inventory_age_s`: seconds since the inventory copy was loaded. The API keeps a copy for 5 min and refreshes it in the
+  background; if a refresh fails it keeps the last live copy (still `supabase`) instead of switching to the fallback.
+- `ai_layer`: `/parse-request` and `/explain` are mounted. `llm_enabled`: they call the LLM (else rules/templates).
+- `commit`: deployed git commit (Render), `null` locally. Added 14 Nov, additive.
 
 ## GET /categories
 `[ { "slug": "chairs", "name": "Chairs", "unit_label": "chair" }, ... ]`
@@ -27,6 +31,9 @@ Request
 }
 ```
 - `requirements` is optional. `min_condition`: `"fair" | "good" | "excellent"`.
+- `priority` is optional (added 14 Nov): `"balanced"` (default, same as omitting it) | `"closest"` (distance 0.8,
+  condition 0.1, price 0.1) | `"cheapest"` (0.2 / 0.2 / 0.6) | `"best_condition"` (0.2 / 0.6 / 0.2). Weights are design
+  choices, not learned; the ones used are always in `breakdown.weights`. Good for a "What matters most?" chip row.
 - Hard rules: category matches; ONE availability window covers the whole `start_date..end_date`; reuse mode is `loan` or `rental`; condition and distance limits (if given).
 - `donation` and `resale` items are never returned in this MVP.
 
@@ -45,6 +52,7 @@ Response
       "condition": "excellent",
       "available_quantity": 150,
       "quoted_quantity": 50,
+      "missing_quantity": 0,
       "covers_quantity": true,
       "distance_km": 12.4,
       "unit_price_per_day_try": 12.0,
@@ -59,20 +67,34 @@ Response
       "explanation": null,
       "impact": {
         "avoided_kgco2e": 956.02,
+        "avoided_kgco2e_conservative": 95.6,
+        "transport_kgco2e": 0.0,
         "status": "illustrative",
-        "assumptions": ["Avoided: producing 50 new unit(s) of metals, about 5.0 kg each = 0.250 t x 3824.09335 kgCO2e/t = 956.0 kgCO2e.", "Factor source: DESNZ/Defra 2025, ...", "Item weight and material are rough estimates for demo data."]
+        "basis": { "upper": "New items bought for this event alone.", "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)." },
+        "assumptions": ["Upper bound: producing 50 new unit(s) of metals, about 5.0 kg each = 0.250 t x 3824.09335 kgCO2e/t = 956.0 kgCO2e is avoided.", "Factor source: DESNZ/Defra 2025, ...", "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), ...", "..."]
       }
     }
   ],
-  "suggestions": []
+  "suggestions": [],
+  "inventory_source": "supabase",
+  "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
 }
 ```
-- `estimated_cost_try` = `unit_price_per_day_try * quantity * days`, or `null` for free loans / no price.
-- `covers_quantity` is `false` when the item has fewer units than requested (shown but ranked lower).
+- `estimated_cost_try` = `unit_price_per_day_try * quoted_quantity * days`, or `null` for free loans / no price. `days` counts both ends (21-23 Nov = 3). Show `cost_note` next to it.
+- `covers_quantity` is `false` when the item has fewer units than requested (shown but ranked lower). `missing_quantity` = requested − `quoted_quantity` (0 when covered). Never present a partial option as a complete solution.
+- `inventory_source`: `"supabase"` (live database) or `"json_fallback"` (offline fictional dataset, used when Supabase is unreachable). Same value as `/health`.
+- `matches` holds up to 3 options; fewer when fewer are feasible. A multi-item request ("50 chairs and 2 stage lights") = one `/match` call per category.
+- Added 14 Nov (additive, nothing renamed): `missing_quantity`, `inventory_source`, `cost_note`.
 - `explanation` is filled by the AI layer (Sueda) using ONLY `breakdown`, `distance_km`, `condition`. Backend returns `null`.
-- `impact.avoided_kgco2e` = kgCO2e of producing the NEW items we avoid (weight x DEFRA 2025 material factor) minus delivery emissions. `impact.status`: `"sourced"` (real weights), `"illustrative"` (weights/materials are demo estimates: the UI MUST label it "estimate", never a verified claim) or `"unavailable"` (data missing, `avoided_kgco2e` is `null`). `assumptions` lists the calculation in plain text, show it on demand.
+- Carbon is a RANGE (added 14 Nov, additive). `impact.avoided_kgco2e` = UPPER bound: producing the NEW items we avoid (weight x DEFRA 2025 material factor), as if they were bought for this event alone. `impact.avoided_kgco2e_conservative` = the same production shared over the uses a new item would get (`assumed_uses_per_new_item` in `impact_factors.json`, currently 10, an ASSUMPTION), so it is always illustrative. Both have `impact.transport_kgco2e` (delivery AND return, sourced factor) deducted and are floored at 0. `impact.basis` gives one line per bound. UI: show "Estimated 96–956 kg CO2e avoided (illustrative)", with assumptions on demand; never rank options by CO2 (heavier items would win). `impact.status`: `"sourced"` (real weights), `"illustrative"` (weights/materials are demo estimates: the UI MUST label it "estimate", never a verified claim) or `"unavailable"` (data missing, `avoided_kgco2e` is `null`). `assumptions` lists the calculation in plain text, show it on demand.
 - `suggestions` (what-if, later): `{ "type": "shift_date", "detail": "Starting 1 day later adds 2 options" }`.
 - Empty `matches` is a valid 200 response.
+
+## GET /impact/methodology
+Everything behind the carbon range, for a "How we calculate" screen (added 14 Nov). Numbers come only from
+`backend/impact_factors.json`. Shape: `{ summary, formula: {upper, conservative, transport, floor}, dataset: {name,
+published, url, licence, caveat}, factors: [{id, label, value, unit, status, source}], assumptions: [{id, value,
+status, note}], status_labels: {sourced, illustrative, unavailable}, not_counted: [..], limitations: [..] }`.
 
 ## POST /impact/summary
 Aggregates chosen matches for the dashboard.
@@ -84,14 +106,18 @@ Response
   "total_distance_km": 12.4,
   "estimated_cost_try": 1800.0,
   "avoided_kgco2e": 956.02,
+  "avoided_kgco2e_conservative": 95.6,
+  "transport_kgco2e": 0.0,
   "impact_status": "illustrative",
-  "assumptions": ["..."]
+  "assumptions": ["..."],
+  "inventory_source": "supabase"
 }
 ```
 
-## Planned (Sueda / AI layer, may live in a separate module)
-- `POST /parse-request`: `{ "text": "50 chairs near Lara on 21-23 Nov" }` returns a `/match` request or a list of them.
-- `POST /explain`: `{ "request": {...}, "match": {...} }` returns `{ "explanation": "..." }`.
+## AI layer: POST /parse-request, POST /explain (owner: Sueda, `ai/`)
+Served by the same API (mounted in `main.py` if `ai/` is present). Shapes: `docs/API_CONTRACT_REVIEW.md` D5/D6 on
+branch `feat/web-ai`. `parser` / `explainer` say whether the LLM or the deterministic fallback answered.
+The LLM key is a server env var; without it both routes still answer (rules / templates).
 
 ## POST /match/batch
 Several requests (2-10) that compete for the same stock. Returns a greedy baseline and the MILP optimum side by side.
@@ -113,8 +139,17 @@ Response
 - `note` is set (and `milp` = `greedy`) only if the solver fails; the endpoint never breaks `/match`.
 - This is optimisation, not AI: say so in the pitch.
 
+## Demo fixtures (for the web app's demo mode)
+`backend/fixtures/demo_scenarios.json` holds real, unmodified responses of the endpoints above for the demo scenarios;
+`backend/fixtures/match_golden.json` holds key `/match` numbers for 480 requests as a parity test. Generated by
+`backend/tools/export_demo_fixtures.py`; the backend tests fail if they go stale. See `backend/fixtures/README.md`.
+
 ## Errors
 Invalid input: HTTP 422 (FastAPI default). Other errors: `{ "error": "message" }` (404 unknown id, 500 `internal error`, 503 batch solver unavailable).
+Request limits (added 14 Nov, POST only, per client IP per minute): 60 general, 10 for `/match/batch`, 10 for `/parse-request` +
+`/explain`, and a global cap of 300 AI requests per UTC day. Over a limit: HTTP 429 `{ "error": "..." }` with `Retry-After: 60`
+(the AI cap message says the request can still be filled in manually). Bodies over 64 KB: HTTP 413. `/health` shows
+`ai_requests_today` and `ai_daily_limit`. All limits are env vars (see `docs/DEPLOY.md`).
 CORS allows `http://localhost:5173`, `http://localhost:3000`, `http://localhost:8081`, plus the deployed web origin.
 
 ## Open points

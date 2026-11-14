@@ -1,6 +1,6 @@
 # Backend hand-off (for Noé and Sueda)
 
-Status: works end to end on the offline JSON inventory. The SQL (migrations + seed) is validated on a local in-process Postgres (`cd supabase/tests && npm install && npm test`: 22 checks incl. overlap, stock and RLS rules). The Supabase loader and the real Supabase project are NOT yet tested live.
+Status: works end to end on the offline JSON inventory. The SQL (migrations + seed) is validated on a local in-process Postgres (`cd supabase/tests && npm install && npm test`: 31 checks incl. overlap, stock, RLS and the read-only role). Migrations 0001-0005 + seed are applied on the team Supabase project (14 Nov). The API has NOT yet read from it live: that needs `DATABASE_URL` (read-only role) or the service-role key on the server.
 
 ## Run
 ```
@@ -8,7 +8,7 @@ cd backend
 python -m venv venv
 venv\Scripts\activate          # Windows  (macOS/Linux: source venv/bin/activate)
 pip install -r requirements.txt
-python -m pytest -q             # 30 tests, no network needed
+python -m pytest -q             # 45 tests, no network needed
 uvicorn main:app --reload       # docs: http://localhost:8000/docs
 ```
 Without `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` the API silently uses `backend/data/inventory.json`.
@@ -37,7 +37,7 @@ curl -X POST localhost:8000/impact/summary -H "Content-Type: application/json" -
 
 ## Placeholders and limits (be honest in the pitch)
 - All inventory is fictional.
-- CO2: avoided = weight x DEFRA 2025 material factor (new item we avoid producing) minus delivery (rigid truck, one-way). Factors are read from the official UK Government GHG Conversion Factors 2025 file (see `backend/impact_factors.json` for exact rows). Item weights and materials are ROUGH ESTIMATES for fictional items, so every number is `illustrative`. UK factors are a proxy for Turkey; use phase and end-of-life are ignored; the avoided new item's own delivery is not counted. In the pitch say "estimated", never "measured".
+- CO2 is a range. Upper = weight x DEFRA 2025 material factor (new item bought for this event alone); conservative = the same / assumed uses per new item (10, ASSUMPTION in `impact_factors.json`). Both minus delivery AND return (rigid truck, 2 legs), floored at 0. Factors are read from the official UK Government GHG Conversion Factors 2025 file (see `backend/impact_factors.json` for exact rows). Item weights and materials are ROUGH ESTIMATES for fictional items, so every number is `illustrative`. UK factors are a proxy for Turkey; use phase and end-of-life are ignored; the avoided new item's own delivery is not counted. In the pitch say "estimated", never "measured".
 - Cost savings versus buying new is NOT implemented: the schema has only rental price per day, no new-purchase price.
 - Availability is declared stock, not reservations. Two requests can see the same stock.
 - A stay split across two windows of one item is not matched (rule: one window covers the whole range).

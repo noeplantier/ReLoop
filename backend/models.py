@@ -26,6 +26,8 @@ class MatchRequest(BaseModel):
     end_date: date
     location: Location
     requirements: Optional[Requirements] = None
+    # what the organiser cares most about; null = "balanced" (default weights)
+    priority: Optional[Literal["balanced", "closest", "cheapest", "best_condition"]] = None
 
     @model_validator(mode="after")
     def _dates(self):
@@ -43,8 +45,11 @@ class SupplierOut(BaseModel):
 
 
 class Impact(BaseModel):
-    avoided_kgco2e: Optional[float]
+    avoided_kgco2e: Optional[float]                    # UPPER bound: new items bought for this event alone
+    avoided_kgco2e_conservative: Optional[float] = None  # production shared over assumed uses (illustrative)
+    transport_kgco2e: Optional[float] = None           # round trip, already deducted from both bounds
     status: Literal["sourced", "illustrative", "unavailable"]
+    basis: Optional[dict] = None                       # one-line meaning of each bound
     assumptions: list[str]
 
 
@@ -56,6 +61,7 @@ class MatchOut(BaseModel):
     condition: str
     available_quantity: int
     quoted_quantity: int
+    missing_quantity: int          # requested - quoted; 0 when this option covers the request
     covers_quantity: bool
     distance_km: float
     unit_price_per_day_try: Optional[float]
@@ -71,12 +77,17 @@ class Suggestion(BaseModel):
     detail: str
 
 
+InventorySource = Literal["supabase", "json_fallback"]
+
+
 class MatchResponse(BaseModel):
     request_id: Optional[str]
     days: int
     total_options: int
     matches: list[MatchOut]
     suggestions: list[Suggestion]
+    inventory_source: InventorySource        # live database or the offline fictional dataset
+    cost_note: str                 # what estimated_cost_try does NOT include
 
 
 class Selection(BaseModel):
@@ -96,8 +107,11 @@ class SummaryResponse(BaseModel):
     total_distance_km: float
     estimated_cost_try: Optional[float]
     avoided_kgco2e: Optional[float]
+    avoided_kgco2e_conservative: Optional[float] = None
+    transport_kgco2e: Optional[float] = None
     impact_status: Literal["sourced", "illustrative", "unavailable"]
     assumptions: list[str]
+    inventory_source: InventorySource
 
 
 class BatchRequest(BaseModel):

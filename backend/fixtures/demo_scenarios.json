@@ -1,0 +1,1353 @@
+{
+ "meta": {
+  "generated_by": "backend/tools/export_demo_fixtures.py",
+  "backend_commit": "d626328",
+  "inventory": "fictional demo inventory (backend/data/inventory.json = supabase/seed.sql)",
+  "llm": "off (deterministic)",
+  "presets": {
+   "lara": {
+    "lat": 36.853,
+    "lon": 30.8
+   },
+   "konyaalti": {
+    "lat": 36.88,
+    "lon": 30.64
+   },
+   "kepez": {
+    "lat": 36.93,
+    "lon": 30.7
+   },
+   "belek": {
+    "lat": 36.86,
+    "lon": 31.05
+   },
+   "kemer": {
+    "lat": 36.6,
+    "lon": 30.56
+   },
+   "antalya": {
+    "lat": 36.8969,
+    "lon": 30.7133
+   }
+  }
+ },
+ "scenarios": {
+  "main_demo_chairs": {
+   "label": "50 chairs near Lara, 21-23 Nov (main demo, need 1)",
+   "request": {
+    "category": "chairs",
+    "quantity": 50,
+    "start_date": "2026-11-21",
+    "end_date": "2026-11-23",
+    "location": {
+     "lat": 36.853,
+     "lon": 30.8
+    }
+   },
+   "response": {
+    "request_id": null,
+    "days": 3,
+    "total_options": 7,
+    "matches": [
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000001",
+      "name": "Stackable banquet chairs",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 150,
+      "quoted_quantity": 50,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 12.0,
+      "estimated_cost_try": 1800.0,
+      "score": 0.92,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 1.0,
+       "price_score": 0.6,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 956.02,
+       "avoided_kgco2e_conservative": 95.6,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 50 new unit(s) of metals, about 5.0 kg each = 0.250 t x 3824.09335 kgCO2e/t = 956.0 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 95.6 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.250 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000002",
+      "name": "Folding chairs, white",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "good",
+      "available_quantity": 120,
+      "quoted_quantity": 50,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 8.0,
+      "estimated_cost_try": 1200.0,
+      "score": 0.857,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 0.7,
+       "price_score": 0.733,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 764.82,
+       "avoided_kgco2e_conservative": 76.48,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 50 new unit(s) of metals, about 4.0 kg each = 0.200 t x 3824.09335 kgCO2e/t = 764.8 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 76.5 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.200 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000007",
+      "name": "Conference chairs, upholstered",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000002",
+       "name": "Demo Konyaalti Hotel Storage (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 60,
+      "quoted_quantity": 50,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 14.5,
+      "unit_price_per_day_try": 20.0,
+      "estimated_cost_try": 3000.0,
+      "score": 0.74,
+      "breakdown": {
+       "distance_score": 0.748,
+       "condition_score": 1.0,
+       "price_score": 0.333,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 1718.26,
+       "avoided_kgco2e_conservative": 169.51,
+       "transport_kgco2e": 2.58,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 50 new unit(s) of metals, about 9.0 kg each = 0.450 t x 3824.09335 kgCO2e/t = 1720.8 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 172.1 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.450 t x 14.5 km x 2 legs (there and back) = 2.58 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     }
+    ],
+    "suggestions": [],
+    "inventory_source": "json_fallback",
+    "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
+   }
+  },
+  "main_demo_lighting": {
+   "label": "2 stage lights near Lara, 21-23 Nov (main demo, need 2)",
+   "request": {
+    "category": "lighting",
+    "quantity": 2,
+    "start_date": "2026-11-21",
+    "end_date": "2026-11-23",
+    "location": {
+     "lat": 36.853,
+     "lon": 30.8
+    }
+   },
+   "response": {
+    "request_id": null,
+    "days": 3,
+    "total_options": 2,
+    "matches": [
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000010",
+      "name": "Stage par lights LED",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000002",
+       "name": "Demo Konyaalti Hotel Storage (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "good",
+      "available_quantity": 24,
+      "quoted_quantity": 2,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 14.5,
+      "unit_price_per_day_try": 70.0,
+      "estimated_cost_try": 420.0,
+      "score": 0.784,
+      "breakdown": {
+       "distance_score": 0.748,
+       "condition_score": 0.7,
+       "price_score": 1.0,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 33.85,
+       "avoided_kgco2e_conservative": 3.35,
+       "transport_kgco2e": 0.03,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 2 new unit(s) of electrical small, about 3.0 kg each = 0.006 t x 5647.94563 kgCO2e/t = 33.9 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Electrical items > Electrical items - small, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 3.4 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.006 t x 14.5 km x 2 legs (there and back) = 0.03 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000021",
+      "name": "String festoon lights 20 m",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000004",
+       "name": "Demo Belek Resort Warehouse (fictional)",
+       "city": "Serik"
+      },
+      "reuse_mode": "rental",
+      "condition": "good",
+      "available_quantity": 12,
+      "quoted_quantity": 2,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 22.3,
+      "unit_price_per_day_try": 80.0,
+      "estimated_cost_try": 480.0,
+      "score": 0.53,
+      "breakdown": {
+       "distance_score": 0.641,
+       "condition_score": 0.7,
+       "price_score": 0.0,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 45.11,
+       "avoided_kgco2e_conservative": 4.45,
+       "transport_kgco2e": 0.07,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 2 new unit(s) of electrical small, about 4.0 kg each = 0.008 t x 5647.94563 kgCO2e/t = 45.2 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Electrical items > Electrical items - small, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 4.5 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.008 t x 22.3 km x 2 legs (there and back) = 0.07 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     }
+    ],
+    "suggestions": [
+     {
+      "type": "shift_date",
+      "detail": "Moving the event 1 day earlier gives 2 more option(s)."
+     },
+     {
+      "type": "shift_date",
+      "detail": "Moving the event 1 day later gives 1 more option(s)."
+     }
+    ],
+    "inventory_source": "json_fallback",
+    "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
+   }
+  },
+  "big_order_konyaalti": {
+   "label": "200 chairs near Konyaalti, 21-23 Nov",
+   "request": {
+    "category": "chairs",
+    "quantity": 200,
+    "start_date": "2026-11-21",
+    "end_date": "2026-11-23",
+    "location": {
+     "lat": 36.88,
+     "lon": 30.64
+    }
+   },
+   "response": {
+    "request_id": null,
+    "days": 3,
+    "total_options": 7,
+    "matches": [
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000013",
+      "name": "Plastic stacking chairs",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000003",
+       "name": "Demo Kepez Equipment Depot (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "fair",
+      "available_quantity": 300,
+      "quoted_quantity": 200,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 7.7,
+      "unit_price_per_day_try": 5.0,
+      "estimated_cost_try": 3000.0,
+      "score": 0.715,
+      "breakdown": {
+       "distance_score": 0.857,
+       "condition_score": 0.4,
+       "price_score": 0.833,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 2010.74,
+       "avoided_kgco2e_conservative": 199.43,
+       "transport_kgco2e": 1.82,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 200 new unit(s) of plastics rigid, about 3.0 kg each = 0.600 t x 3354.28062 kgCO2e/t = 2012.6 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Plastic > Plastics: average plastic rigid, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 201.3 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.600 t x 7.7 km x 2 legs (there and back) = 1.82 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000007",
+      "name": "Conference chairs, upholstered",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000002",
+       "name": "Demo Konyaalti Hotel Storage (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 60,
+      "quoted_quantity": 60,
+      "missing_quantity": 140,
+      "covers_quantity": false,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 20.0,
+      "estimated_cost_try": 3600.0,
+      "score": 0.867,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 1.0,
+       "price_score": 0.333,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 2065.01,
+       "avoided_kgco2e_conservative": 206.5,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 60 new unit(s) of metals, about 9.0 kg each = 0.540 t x 3824.09335 kgCO2e/t = 2065.0 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 206.5 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.540 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000001",
+      "name": "Stackable banquet chairs",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 150,
+      "quoted_quantity": 150,
+      "missing_quantity": 50,
+      "covers_quantity": false,
+      "distance_km": 14.5,
+      "unit_price_per_day_try": 12.0,
+      "estimated_cost_try": 5400.0,
+      "score": 0.794,
+      "breakdown": {
+       "distance_score": 0.748,
+       "condition_score": 1.0,
+       "price_score": 0.6,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 2863.77,
+       "avoided_kgco2e_conservative": 282.51,
+       "transport_kgco2e": 4.3,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 150 new unit(s) of metals, about 5.0 kg each = 0.750 t x 3824.09335 kgCO2e/t = 2868.1 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 286.8 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.750 t x 14.5 km x 2 legs (there and back) = 4.30 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     }
+    ],
+    "suggestions": [],
+    "inventory_source": "json_fallback",
+    "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
+   }
+  },
+  "partial_match": {
+   "label": "400 chairs near Lara: no single option covers it",
+   "request": {
+    "category": "chairs",
+    "quantity": 400,
+    "start_date": "2026-11-21",
+    "end_date": "2026-11-23",
+    "location": {
+     "lat": 36.853,
+     "lon": 30.8
+    }
+   },
+   "response": {
+    "request_id": null,
+    "days": 3,
+    "total_options": 7,
+    "matches": [
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000001",
+      "name": "Stackable banquet chairs",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 150,
+      "quoted_quantity": 150,
+      "missing_quantity": 250,
+      "covers_quantity": false,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 12.0,
+      "estimated_cost_try": 5400.0,
+      "score": 0.92,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 1.0,
+       "price_score": 0.6,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 2868.07,
+       "avoided_kgco2e_conservative": 286.81,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 150 new unit(s) of metals, about 5.0 kg each = 0.750 t x 3824.09335 kgCO2e/t = 2868.1 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 286.8 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.750 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000002",
+      "name": "Folding chairs, white",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "good",
+      "available_quantity": 120,
+      "quoted_quantity": 120,
+      "missing_quantity": 280,
+      "covers_quantity": false,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 8.0,
+      "estimated_cost_try": 2880.0,
+      "score": 0.857,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 0.7,
+       "price_score": 0.733,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 1835.56,
+       "avoided_kgco2e_conservative": 183.56,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 120 new unit(s) of metals, about 4.0 kg each = 0.480 t x 3824.09335 kgCO2e/t = 1835.6 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 183.6 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.480 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000007",
+      "name": "Conference chairs, upholstered",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000002",
+       "name": "Demo Konyaalti Hotel Storage (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 60,
+      "quoted_quantity": 60,
+      "missing_quantity": 340,
+      "covers_quantity": false,
+      "distance_km": 14.5,
+      "unit_price_per_day_try": 20.0,
+      "estimated_cost_try": 3600.0,
+      "score": 0.74,
+      "breakdown": {
+       "distance_score": 0.748,
+       "condition_score": 1.0,
+       "price_score": 0.333,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 2061.92,
+       "avoided_kgco2e_conservative": 203.41,
+       "transport_kgco2e": 3.09,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 60 new unit(s) of metals, about 9.0 kg each = 0.540 t x 3824.09335 kgCO2e/t = 2065.0 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 206.5 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.540 t x 14.5 km x 2 legs (there and back) = 3.09 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     }
+    ],
+    "suggestions": [],
+    "inventory_source": "json_fallback",
+    "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
+   }
+  },
+  "no_options": {
+   "label": "10 chairs near Lara in January: nothing available",
+   "request": {
+    "category": "chairs",
+    "quantity": 10,
+    "start_date": "2027-01-10",
+    "end_date": "2027-01-11",
+    "location": {
+     "lat": 36.853,
+     "lon": 30.8
+    }
+   },
+   "response": {
+    "request_id": null,
+    "days": 2,
+    "total_options": 0,
+    "matches": [],
+    "suggestions": [],
+    "inventory_source": "json_fallback",
+    "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
+   }
+  },
+  "priority_cheapest": {
+   "label": "50 chairs near Lara, priority = cheapest",
+   "request": {
+    "category": "chairs",
+    "quantity": 50,
+    "start_date": "2026-11-21",
+    "end_date": "2026-11-23",
+    "location": {
+     "lat": 36.853,
+     "lon": 30.8
+    },
+    "priority": "cheapest"
+   },
+   "response": {
+    "request_id": null,
+    "days": 3,
+    "total_options": 7,
+    "matches": [
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000002",
+      "name": "Folding chairs, white",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "good",
+      "available_quantity": 120,
+      "quoted_quantity": 50,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 8.0,
+      "estimated_cost_try": 1200.0,
+      "score": 0.78,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 0.7,
+       "price_score": 0.733,
+       "weights": {
+        "distance": 0.2,
+        "condition": 0.2,
+        "price": 0.6
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 764.82,
+       "avoided_kgco2e_conservative": 76.48,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 50 new unit(s) of metals, about 4.0 kg each = 0.200 t x 3824.09335 kgCO2e/t = 764.8 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 76.5 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.200 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000025",
+      "name": "Wooden folding chairs",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000005",
+       "name": "Demo Kemer Community Collective (fictional)",
+       "city": "Kemer"
+      },
+      "reuse_mode": "loan",
+      "condition": "fair",
+      "available_quantity": 70,
+      "quoted_quantity": 50,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 35.3,
+      "unit_price_per_day_try": null,
+      "estimated_cost_try": null,
+      "score": 0.779,
+      "breakdown": {
+       "distance_score": 0.493,
+       "condition_score": 0.4,
+       "price_score": 1.0,
+       "weights": {
+        "distance": 0.2,
+        "condition": 0.2,
+        "price": 0.6
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 63.89,
+       "avoided_kgco2e_conservative": 3.25,
+       "transport_kgco2e": 3.49,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 50 new unit(s) of wood, about 5.0 kg each = 0.250 t x 269.50416 kgCO2e/t = 67.4 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Wood, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 6.7 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.250 t x 35.3 km x 2 legs (there and back) = 3.49 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000001",
+      "name": "Stackable banquet chairs",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 150,
+      "quoted_quantity": 50,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 12.0,
+      "estimated_cost_try": 1800.0,
+      "score": 0.76,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 1.0,
+       "price_score": 0.6,
+       "weights": {
+        "distance": 0.2,
+        "condition": 0.2,
+        "price": 0.6
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 956.02,
+       "avoided_kgco2e_conservative": 95.6,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 50 new unit(s) of metals, about 5.0 kg each = 0.250 t x 3824.09335 kgCO2e/t = 956.0 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 95.6 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.250 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     }
+    ],
+    "suggestions": [],
+    "inventory_source": "json_fallback",
+    "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
+   }
+  },
+  "tables_belek": {
+   "label": "10 tables near Belek, 21-23 Nov",
+   "request": {
+    "category": "tables",
+    "quantity": 10,
+    "start_date": "2026-11-21",
+    "end_date": "2026-11-23",
+    "location": {
+     "lat": 36.86,
+     "lon": 31.05
+    }
+   },
+   "response": {
+    "request_id": null,
+    "days": 3,
+    "total_options": 5,
+    "matches": [
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000020",
+      "name": "Long banquet tables 240 cm",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000004",
+       "name": "Demo Belek Resort Warehouse (fictional)",
+       "city": "Serik"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 18,
+      "quoted_quantity": 10,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 110.0,
+      "estimated_cost_try": 3300.0,
+      "score": 0.8,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 1.0,
+       "price_score": 0.0,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 59.29,
+       "avoided_kgco2e_conservative": 5.93,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 10 new unit(s) of wood, about 22.0 kg each = 0.220 t x 269.50416 kgCO2e/t = 59.3 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Wood, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 5.9 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.220 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000008",
+      "name": "Cocktail tables",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000002",
+       "name": "Demo Konyaalti Hotel Storage (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "good",
+      "available_quantity": 30,
+      "quoted_quantity": 10,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 36.5,
+      "unit_price_per_day_try": 45.0,
+      "estimated_cost_try": 1350.0,
+      "score": 0.569,
+      "breakdown": {
+       "distance_score": 0.482,
+       "condition_score": 0.7,
+       "price_score": 0.591,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 457.16,
+       "avoided_kgco2e_conservative": 44.16,
+       "transport_kgco2e": 1.73,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 10 new unit(s) of metals, about 12.0 kg each = 0.120 t x 3824.09335 kgCO2e/t = 458.9 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 45.9 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.120 t x 36.5 km x 2 legs (there and back) = 1.73 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000003",
+      "name": "Round banquet tables, 180 cm",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "good",
+      "available_quantity": 20,
+      "quoted_quantity": 10,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 22.3,
+      "unit_price_per_day_try": 90.0,
+      "estimated_cost_try": 2700.0,
+      "score": 0.567,
+      "breakdown": {
+       "distance_score": 0.641,
+       "condition_score": 0.7,
+       "price_score": 0.182,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 78.21,
+       "avoided_kgco2e_conservative": 5.44,
+       "transport_kgco2e": 2.64,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 10 new unit(s) of wood, about 30.0 kg each = 0.300 t x 269.50416 kgCO2e/t = 80.9 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Wood, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 8.1 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.300 t x 22.3 km x 2 legs (there and back) = 2.64 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     }
+    ],
+    "suggestions": [],
+    "inventory_source": "json_fallback",
+    "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
+   }
+  },
+  "filters": {
+   "label": "60 chairs near Lara, good condition or better, within 20 km",
+   "request": {
+    "category": "chairs",
+    "quantity": 60,
+    "start_date": "2026-11-21",
+    "end_date": "2026-11-23",
+    "location": {
+     "lat": 36.853,
+     "lon": 30.8
+    },
+    "requirements": {
+     "min_condition": "good",
+     "max_distance_km": 20
+    }
+   },
+   "response": {
+    "request_id": null,
+    "days": 3,
+    "total_options": 4,
+    "matches": [
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000001",
+      "name": "Stackable banquet chairs",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 150,
+      "quoted_quantity": 60,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 12.0,
+      "estimated_cost_try": 2160.0,
+      "score": 0.933,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 1.0,
+       "price_score": 0.667,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 1147.23,
+       "avoided_kgco2e_conservative": 114.72,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 60 new unit(s) of metals, about 5.0 kg each = 0.300 t x 3824.09335 kgCO2e/t = 1147.2 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 114.7 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.300 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000002",
+      "name": "Folding chairs, white",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000001",
+       "name": "Demo Lara Event Hall (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "good",
+      "available_quantity": 120,
+      "quoted_quantity": 60,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 0.0,
+      "unit_price_per_day_try": 8.0,
+      "estimated_cost_try": 1440.0,
+      "score": 0.91,
+      "breakdown": {
+       "distance_score": 1.0,
+       "condition_score": 0.7,
+       "price_score": 1.0,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 917.78,
+       "avoided_kgco2e_conservative": 91.78,
+       "transport_kgco2e": 0.0,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 60 new unit(s) of metals, about 4.0 kg each = 0.240 t x 3824.09335 kgCO2e/t = 917.8 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 91.8 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.240 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     },
+     {
+      "item_id": "b0000000-0000-4000-8000-000000000007",
+      "name": "Conference chairs, upholstered",
+      "supplier": {
+       "id": "a0000000-0000-4000-8000-000000000002",
+       "name": "Demo Konyaalti Hotel Storage (fictional)",
+       "city": "Antalya"
+      },
+      "reuse_mode": "rental",
+      "condition": "excellent",
+      "available_quantity": 60,
+      "quoted_quantity": 60,
+      "missing_quantity": 0,
+      "covers_quantity": true,
+      "distance_km": 14.5,
+      "unit_price_per_day_try": 20.0,
+      "estimated_cost_try": 3600.0,
+      "score": 0.674,
+      "breakdown": {
+       "distance_score": 0.748,
+       "condition_score": 1.0,
+       "price_score": 0.0,
+       "weights": {
+        "distance": 0.5,
+        "condition": 0.3,
+        "price": 0.2
+       }
+      },
+      "explanation": null,
+      "impact": {
+       "avoided_kgco2e": 2061.92,
+       "avoided_kgco2e_conservative": 203.41,
+       "transport_kgco2e": 3.09,
+       "status": "illustrative",
+       "basis": {
+        "upper": "New items bought for this event alone.",
+        "conservative": "New items would serve 10 events; this event gets 1/10 (assumption)."
+       },
+       "assumptions": [
+        "Upper bound: producing 60 new unit(s) of metals, about 9.0 kg each = 0.540 t x 3824.09335 kgCO2e/t = 2065.0 kgCO2e is avoided.",
+        "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+        "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 206.5 kgCO2e.",
+        "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.540 t x 14.5 km x 2 legs (there and back) = 3.09 kgCO2e (rigid diesel truck).",
+        "Item weight and material are rough estimates for demo data.",
+        "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted."
+       ]
+      }
+     }
+    ],
+    "suggestions": [
+     {
+      "type": "widen_radius",
+      "detail": "Widening the radius to 30 km gives 1 more option(s)."
+     },
+     {
+      "type": "relax_condition",
+      "detail": "Accepting 'fair' condition gives 1 more option(s)."
+     }
+    ],
+    "inventory_source": "json_fallback",
+    "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
+   }
+  }
+ },
+ "main_demo_summary": {
+  "request": {
+   "selections": [
+    {
+     "item_id": "b0000000-0000-4000-8000-000000000001",
+     "quantity": 50,
+     "start_date": "2026-11-21",
+     "end_date": "2026-11-23",
+     "location": {
+      "lat": 36.853,
+      "lon": 30.8
+     }
+    },
+    {
+     "item_id": "b0000000-0000-4000-8000-000000000010",
+     "quantity": 2,
+     "start_date": "2026-11-21",
+     "end_date": "2026-11-23",
+     "location": {
+      "lat": 36.853,
+      "lon": 30.8
+     }
+    }
+   ]
+  },
+  "response": {
+   "reused_units": 52,
+   "total_distance_km": 14.5,
+   "estimated_cost_try": 2220.0,
+   "avoided_kgco2e": 989.87,
+   "avoided_kgco2e_conservative": 98.95,
+   "transport_kgco2e": 0.03,
+   "impact_status": "illustrative",
+   "assumptions": [
+    "Upper bound: producing 50 new unit(s) of metals, about 5.0 kg each = 0.250 t x 3824.09335 kgCO2e/t = 956.0 kgCO2e is avoided.",
+    "Factor source: DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+    "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 95.6 kgCO2e.",
+    "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.250 t x 0.0 km x 2 legs (there and back) = 0.00 kgCO2e (rigid diesel truck).",
+    "Item weight and material are rough estimates for demo data.",
+    "Proxy: UK Defra 2025 factors, not Turkey-specific; use phase, end of life and the new item's own delivery are not counted.",
+    "Upper bound: producing 2 new unit(s) of electrical small, about 3.0 kg each = 0.006 t x 5647.94563 kgCO2e/t = 33.9 kgCO2e is avoided.",
+    "Factor source: DESNZ/Defra 2025, Material use > Electrical items > Electrical items - small, Primary material production, tonnes",
+    "Conservative bound: a new item would serve 10 events (ASSUMPTION, not sourced), so this event avoids 1/10 of that: 3.4 kgCO2e.",
+    "Transport deducted from both: 0.19748 kgCO2e/t-km x 0.006 t x 14.5 km x 2 legs (there and back) = 0.03 kgCO2e (rigid diesel truck)."
+   ],
+   "inventory_source": "json_fallback"
+  }
+ },
+ "methodology": {
+  "summary": "Reusing an item avoids the emissions of making a new one. We estimate that from the item's weight and main material, subtract the emissions of moving it there and back, and give a range: an upper bound and a conservative bound.",
+  "formula": {
+   "upper": "weight (t) x quantity x material factor (kgCO2e/t) - transport",
+   "conservative": "weight (t) x quantity x material factor / 10 uses - transport",
+   "transport": "transport factor (kgCO2e/t-km) x weight (t) x quantity x distance (km) x 2 legs",
+   "floor": "Both bounds are floored at 0."
+  },
+  "dataset": {
+   "name": "UK Government GHG Conversion Factors for Company Reporting 2025 (DESNZ/Defra)",
+   "published": "2025-06-10",
+   "url": "https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025",
+   "licence": "Open Government Licence v3.0",
+   "caveat": "UK factors, used as a proxy for Turkey. Not specific to Turkish fleets or materials."
+  },
+  "factors": [
+   {
+    "id": "transport",
+    "label": "Road freight, rigid diesel truck",
+    "value": 0.19748,
+    "unit": "kgCO2e per tonne-km",
+    "status": "sourced",
+    "source": "DESNZ/Defra 2025, Freighting goods > HGV (all diesel) > All rigids, Average laden, tonne.km, kg CO2e (Scope 3, excludes well-to-tank)"
+   },
+   {
+    "id": "wood",
+    "label": "Wood",
+    "value": 269.50416,
+    "unit": "kgCO2e per tonne (primary production)",
+    "status": "sourced",
+    "source": "DESNZ/Defra 2025, Material use > Construction > Wood, Primary material production, tonnes"
+   },
+   {
+    "id": "metals",
+    "label": "Metals",
+    "value": 3824.09335,
+    "unit": "kgCO2e per tonne (primary production)",
+    "status": "sourced",
+    "source": "DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes"
+   },
+   {
+    "id": "plastics_rigid",
+    "label": "Rigid plastics",
+    "value": 3354.28062,
+    "unit": "kgCO2e per tonne (primary production)",
+    "status": "sourced",
+    "source": "DESNZ/Defra 2025, Material use > Plastic > Plastics: average plastic rigid, Primary material production, tonnes"
+   },
+   {
+    "id": "electrical_large",
+    "label": "Large electrical items",
+    "value": 3267.0,
+    "unit": "kgCO2e per tonne (primary production)",
+    "status": "sourced",
+    "source": "DESNZ/Defra 2025, Material use > Electrical items > Electrical items - large, Primary material production, tonnes"
+   },
+   {
+    "id": "electrical_small",
+    "label": "Small electrical items",
+    "value": 5647.94563,
+    "unit": "kgCO2e per tonne (primary production)",
+    "status": "sourced",
+    "source": "DESNZ/Defra 2025, Material use > Electrical items > Electrical items - small, Primary material production, tonnes"
+   }
+  ],
+  "assumptions": [
+   {
+    "id": "assumed_uses_per_new_item",
+    "value": 10,
+    "status": "illustrative",
+    "note": "ASSUMPTION, not sourced: a new item bought for this event would serve 10 events in its life. No citable figure was found for event-equipment reuse cycles (checked 14 Nov 2026: only vendor lifespan claims in years). Change it here; every result recomputes."
+   },
+   {
+    "id": "transport_legs",
+    "value": 2,
+    "status": "assumption",
+    "note": "Modelling choice: delivery to the event plus return to the supplier (the empty truck's return is not counted). The per tonne-km factor itself is sourced."
+   },
+   {
+    "id": "item_weights_and_materials",
+    "value": null,
+    "status": "illustrative",
+    "note": "Each item's weight and main material are rough estimates for fictional demo data."
+   }
+  ],
+  "status_labels": {
+   "sourced": "Every input is from a published source (no demo estimates).",
+   "illustrative": "At least one input is an estimate or an assumption: show as an estimate, never as a verified claim.",
+   "unavailable": "Weight, material or factor missing: no number is shown."
+  },
+  "not_counted": [
+   "Use phase (e.g. electricity for lights)",
+   "End of life (disposal or recycling)",
+   "Delivery of the new item that was not bought",
+   "Empty truck runs: only the two loaded legs (delivery, then return of the items) are counted"
+  ],
+  "limitations": [
+   "UK factors are used as a proxy for Turkey.",
+   "Material factors are per tonne of material, not per finished product; manufacturing and packaging are not modelled separately.",
+   "The conservative bound depends on an assumed number of uses with no citable source.",
+   "All inventory in this prototype is fictional."
+  ]
+ }
+}

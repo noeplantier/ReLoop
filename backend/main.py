@@ -1,9 +1,11 @@
 """Thin HTTP layer: load inventory, call match.py / impact.py, return JSON. No matching logic here."""
 import json
 import os
+import sys
 from pathlib import Path
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -12,13 +14,42 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import impact
 import match
+import inventory
+import ratelimit
 from inventory import load_inventory
 from models import (BatchRequest, BatchResponse, MatchRequest, MatchResponse, SummaryRequest,
                     SummaryResponse)
 
 log = logging.getLogger("reloop.api")
 
-app = FastAPI(title="ReLoop API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app):
+    # Warm start: load the inventory once at boot (the database is far away and the free host
+    # sleeps), so the first search of a demo does not wait for it.
+    try:
+        load_inventory()
+    except Exception as e:  # noqa: BLE001 - never block startup
+        log.warning("Warm-up failed (%s); first request will load", type(e).__name__)
+    yield
+
+
+app = FastAPI(title="ReLoop API", version="0.1.0", lifespan=lifespan)
+
+LIMITS = ratelimit.Limits()
+
+
+# Added BEFORE CORS on purpose: the CORS middleware wraps it, so a browser can read a 429 too.
+@app.middleware("http")
+async def request_limits(request: Request, call_next):
+    if request.method == "POST":
+        size = request.headers.get("content-length")
+        if size and size.isdigit() and int(size) > LIMITS.max_body:
+            return JSONResponse(status_code=413, content={"error": "Request body too large."})
+        denied = LIMITS.check(request.url.path, ratelimit.client_ip(request))
+        if denied:
+            return JSONResponse(status_code=denied[0], content={"error": denied[1]},
+                                headers={"Retry-After": "60"})
+    return await call_next(request)
 
 # Extra allowed origins (e.g. the deployed web app) via CORS_ORIGINS="https://a.app,https://b.app"
 EXTRA_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
@@ -30,6 +61,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# AI layer (Sueda's `ai/` package at the repo root): POST /parse-request and POST /explain.
+# Optional on purpose: if the package is missing or fails to import, the matching API still starts
+# and those two routes simply do not exist. The LLM key is read inside ai/ from server env only.
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+try:
+    from ai.router import router as ai_router
+    app.include_router(ai_router)
+    AI_LAYER = True
+except Exception as e:  # noqa: BLE001 - never let the AI layer take /match down
+    log.warning("AI layer not loaded (%s); /parse-request and /explain unavailable", type(e).__name__)
+    AI_LAYER = False
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -46,12 +89,33 @@ async def unexpected_error(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"error": "internal error"})
 
 
+# The inventory has rental prices only; nothing else is known, so nothing else is estimated.
+COST_NOTE = ("Rental price only (unit price x quantity x days). Delivery, deposit, setup and "
+             "taxes are not included.")
+
 FACTORS = json.loads((Path(__file__).parent / "impact_factors.json").read_text(encoding="utf-8"))
+
+
+def _llm_enabled():
+    """True only if the AI layer is loaded AND configured to call an LLM (else rules/templates)."""
+    if not AI_LAYER:
+        return False
+    try:
+        from ai import llm
+        return bool(llm.enabled())
+    except Exception:  # noqa: BLE001
+        return False
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "inventory_source": load_inventory()["source"]}
+    load_inventory()
+    st = inventory.status()
+    commit = os.getenv("RENDER_GIT_COMMIT") or None
+    return {"status": "ok", "inventory_source": st["source"], "inventory_age_s": st["age_s"],
+            "ai_layer": AI_LAYER, "llm_enabled": _llm_enabled(),
+            "commit": commit[:7] if commit else None,
+            "ai_requests_today": LIMITS.ai_used_today(), "ai_daily_limit": LIMITS.ai_per_day}
 
 
 @app.get("/categories")
@@ -70,7 +134,8 @@ def post_match(req: MatchRequest):
         m.pop("category")
     sugg = match.suggestions(r, inv["items"], inv["suppliers"], total)
     return {"request_id": req.request_id, "days": days, "total_options": total,
-            "matches": top, "suggestions": sugg}
+            "matches": top, "suggestions": sugg, "inventory_source": inv["source"],
+            "cost_note": COST_NOTE}
 
 
 @app.post("/match/batch", response_model=BatchResponse)
@@ -85,11 +150,18 @@ def post_match_batch(req: BatchRequest):
     return batch.compare(reqs, inv["items"], inv["suppliers"], req.max_suppliers_per_request)
 
 
+@app.get("/impact/methodology")
+def impact_methodology():
+    """How the carbon range is calculated, with every factor, source and assumption (for a
+    "How we calculate" screen). Numbers come only from impact_factors.json."""
+    return impact.methodology(FACTORS)
+
+
 @app.post("/impact/summary", response_model=SummaryResponse)
 def impact_summary(req: SummaryRequest):
     inv = load_inventory()
     by_id = {i["id"]: i for i in inv["items"]}
-    units, dist, cost, avoided = 0, 0.0, 0.0, 0.0
+    units, dist, cost, avoided, avoided_low, transport = 0, 0.0, 0.0, 0.0, 0.0, 0.0
     any_cost = False
     statuses, assumptions, any_avoided = [], [], False
     for s in req.selections:
@@ -115,6 +187,8 @@ def impact_summary(req: SummaryRequest):
                 assumptions.append(a)
         if e["avoided_kgco2e"] is not None:
             avoided += e["avoided_kgco2e"]
+            avoided_low += e["avoided_kgco2e_conservative"]
+            transport += e["transport_kgco2e"] or 0.0
             any_avoided = True
     # Weakest evidence wins: one illustrative or unavailable line makes the whole total so.
     status = ("unavailable" if "unavailable" in statuses
@@ -122,4 +196,7 @@ def impact_summary(req: SummaryRequest):
     return {"reused_units": units, "total_distance_km": round(dist, 1),
             "estimated_cost_try": round(cost, 2) if any_cost else None,
             "avoided_kgco2e": round(avoided, 2) if any_avoided and status != "unavailable" else None,
-            "impact_status": status, "assumptions": assumptions}
+            "avoided_kgco2e_conservative": round(avoided_low, 2) if any_avoided and status != "unavailable" else None,
+            "transport_kgco2e": round(transport, 2) if any_avoided and status != "unavailable" else None,
+            "impact_status": status, "assumptions": assumptions,
+            "inventory_source": inv["source"]}

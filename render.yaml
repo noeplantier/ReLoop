@@ -1,20 +1,32 @@
-# Render blueprint: deploys the FastAPI backend from backend/.
-# Secrets (SUPABASE_*) are set in the Render dashboard, never in git.
+# Render blueprint: ONE web service = the FastAPI backend (backend/) + the AI layer (ai/, if present).
+# Built from the repo root because ai/ lives next to backend/. Secrets are set in the Render
+# dashboard, never in git.
 services:
   - type: web
     name: reloop-api
     runtime: python
-    rootDir: backend
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    region: frankfurt     # closest Render region to Turkey
+    plan: free            # sleeps after ~15 min idle; Noé decides on an upgrade for demo day
+    buildCommand: >-
+      pip install -r backend/requirements.txt &&
+      if [ -f ai/requirements.txt ]; then pip install -r ai/requirements.txt; fi
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
-      - key: SUPABASE_URL
+      - key: DATABASE_URL          # preferred: read-only role reloop_reader (docs/DEPLOY.md)
+        sync: false
+      - key: SUPABASE_URL          # fallback with the service-role key; leave empty if DATABASE_URL is set
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: CORS_ORIGINS
+        sync: false
+      # AI layer (ai/llm.py). Without them the AI routes answer with rules/templates only.
+      - key: LLM_PROVIDER          # "anthropic" to enable LLM calls
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: ANTHROPIC_API_KEY     # set by Noé directly in Render; never in git, chat or the web app
         sync: false

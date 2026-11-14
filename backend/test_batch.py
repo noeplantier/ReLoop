@@ -4,7 +4,11 @@ import os
 # Empty (not removed) so a developer's backend/.env cannot switch the tests to the live database.
 os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = ""
+os.environ["DATABASE_URL"] = ""
+# Tests send hundreds of requests from one client: lift the public request limits (tested separately).
+os.environ.update(RATE_LIMIT_PER_MIN="1000000", HEAVY_RATE_LIMIT_PER_MIN="1000000", AI_RATE_LIMIT_PER_MIN="1000000", AI_DAILY_LIMIT="1000000")
 
+import time
 from collections import defaultdict
 
 from fastapi.testclient import TestClient
@@ -166,3 +170,164 @@ def test_tests_never_use_live_database():
     import inventory
     inventory._cache.update(t=0.0, data=None)
     assert inventory.load_inventory(force_refresh=True)["source"] == "json_fallback"
+
+
+def test_match_reports_source_missing_quantity_and_cost_note():
+    # Noé's demo request: 50 chairs near Lara, 21-23 Nov
+    r = client.post("/match", json=R(1, "chairs", 50, 21, 23, "Lara")).json()
+    assert r["inventory_source"] == "json_fallback"          # tests never touch the live database
+    assert "Delivery" in r["cost_note"] and "not included" in r["cost_note"]
+    assert all(m["missing_quantity"] == 0 and m["covers_quantity"] for m in r["matches"])
+    # more than any single item holds: every option is partial and says how much is missing
+    big = client.post("/match", json=R(2, "chairs", 400, 21, 23, "Lara")).json()
+    assert big["matches"] and all(not m["covers_quantity"] for m in big["matches"])
+    assert all(m["missing_quantity"] == 400 - m["quoted_quantity"] > 0 for m in big["matches"])
+
+
+def test_database_url_takes_priority_and_is_normalised(monkeypatch):
+    import inventory
+    j = _load_json()
+    doc = {"suppliers": list(j["suppliers"].values()), "categories": j["categories"],
+           "items": [{**i, "unit_price_per_day_try": None if i["unit_price_per_day_try"] is None
+                      else str(i["unit_price_per_day_try"])} for i in j["items"]]}   # numeric -> str like Postgres
+    monkeypatch.setenv("DATABASE_URL", "postgresql://reloop_reader@example.invalid/postgres")
+    monkeypatch.setattr(inventory, "_load_postgres", lambda dsn: inventory._from_query_json(doc))
+    inventory._cache.update(t=0.0, data=None)
+    inv = inventory.load_inventory(force_refresh=True)
+    assert inv["source"] == "supabase" and len(inv["items"]) == len(j["items"])
+    assert all(isinstance(i["unit_price_per_day_try"], (float, type(None))) for i in inv["items"])
+    inventory._cache.update(t=0.0, data=None)
+
+
+def test_unreachable_database_url_falls_back_to_json(monkeypatch):
+    import inventory
+    monkeypatch.setenv("DATABASE_URL", "postgresql://reloop_reader:x@127.0.0.1:1/postgres")
+    inventory._cache.update(t=0.0, data=None)
+    assert inventory.load_inventory(force_refresh=True)["source"] == "json_fallback"
+    inventory._cache.update(t=0.0, data=None)
+
+
+def test_impact_summary_reports_inventory_source():
+    top = client.post("/match", json=R(1, "chairs", 50, 21, 23, "Lara")).json()["matches"][0]
+    sel = {"item_id": top["item_id"], "quantity": 50, "start_date": "2026-11-21",
+           "end_date": "2026-11-23", "location": {"lat": 36.853, "lon": 30.80}}
+    assert client.post("/impact/summary", json={"selections": [sel]}).json()["inventory_source"] == "json_fallback"
+
+
+# --- warm start / stale-while-revalidate cache (roadmap 0.2) ---
+
+def _live_copy():
+    return {**_load_json(), "source": "supabase"}
+
+
+def test_stale_copy_served_immediately_and_refreshed_in_background(monkeypatch):
+    import inventory, time
+    calls = []
+    def slow_load():
+        calls.append(1)
+        time.sleep(0.3)
+        return _live_copy()
+    monkeypatch.setattr(inventory, "_load_supabase", slow_load)
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+    assert inventory.load_inventory()["source"] == "supabase"          # first load waits
+    inventory._cache["t"] = time.time() - inventory.CACHE_SECONDS - 1     # make it stale
+    t0 = time.time()
+    assert inventory.load_inventory()["source"] == "supabase"
+    assert time.time() - t0 < 0.1                                         # did NOT wait for the DB
+    time.sleep(0.5)
+    assert len(calls) == 2                                                # background refresh ran
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+
+
+def test_failed_refresh_keeps_last_live_copy(monkeypatch):
+    import inventory
+    monkeypatch.setattr(inventory, "_load_supabase", _live_copy)
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+    assert inventory.load_inventory()["source"] == "supabase"
+    def down():
+        raise RuntimeError("network")
+    monkeypatch.setattr(inventory, "_load_supabase", down)
+    assert inventory.load_inventory(force_refresh=True)["source"] == "supabase"   # not json_fallback
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+    assert inventory.load_inventory()["source"] == "json_fallback"    # nothing live yet -> fallback
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+
+
+def test_startup_warms_the_cache():
+    import inventory
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+    with TestClient(app) as c:                     # `with` runs the lifespan (startup)
+        assert inventory._cache["data"] is not None
+        assert c.get("/health").json()["inventory_age_s"] is not None
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+
+
+def test_demo_fixtures_are_up_to_date():
+    """backend/fixtures/ feeds the web app's demo mode; it must equal what the engine returns now.
+    If this fails: python tools/export_demo_fixtures.py (then tell Sueda to copy the new files)."""
+    import json
+    from pathlib import Path
+    from tools import export_demo_fixtures as ex
+    scen, gold = ex.build()
+    d = Path(__file__).parent / "fixtures"
+    old_s = json.loads((d / "demo_scenarios.json").read_text(encoding="utf-8"))
+    old_g = json.loads((d / "match_golden.json").read_text(encoding="utf-8"))
+    assert old_g["cases"] == gold["cases"]
+    for sid, entry in scen["scenarios"].items():
+        assert old_s["scenarios"][sid]["request"] == entry["request"], sid
+        assert old_s["scenarios"][sid]["response"] == entry["response"], sid
+    assert old_s["main_demo_summary"] == scen["main_demo_summary"]
+    assert old_s["methodology"] == scen["methodology"]
+
+
+# --- public request limits (Noé: required before paid AI is exposed) ---
+
+def _tight_limits(monkeypatch, **env):
+    import main, ratelimit
+    for k, v in {"RATE_LIMIT_PER_MIN": "3", "HEAVY_RATE_LIMIT_PER_MIN": "1", "AI_RATE_LIMIT_PER_MIN": "2",
+                 "AI_DAILY_LIMIT": "3", "MAX_BODY_BYTES": "2000", **env}.items():
+        monkeypatch.setenv(k, v)
+    lim = ratelimit.Limits()
+    monkeypatch.setattr(main, "LIMITS", lim)
+    return lim
+
+
+def test_rate_limit_per_ip_returns_429_with_error_format(monkeypatch):
+    _tight_limits(monkeypatch)
+    body = R(1, "chairs", 5, 21, 23, "Lara")
+    codes = [client.post("/match", json=body).status_code for _ in range(4)]
+    assert codes == [200, 200, 200, 429]
+    r = client.post("/match", json=body)
+    assert r.json()["error"].startswith("Too many requests") and r.headers["retry-after"] == "60"
+    # another client (behind the proxy) is not affected
+    assert client.post("/match", json=body, headers={"X-Forwarded-For": "203.0.113.7"}).status_code == 200
+    assert client.get("/health").status_code == 200          # GETs are never limited
+
+
+def test_ai_routes_have_a_global_daily_cap(monkeypatch):
+    lim = _tight_limits(monkeypatch)
+    ips = ["198.51.100.1", "198.51.100.2", "198.51.100.3", "198.51.100.4"]
+    # different clients, so only the GLOBAL daily cap (3) can stop the 4th
+    results = [lim.check("/parse-request", ip) for ip in ips]
+    assert results[:3] == [None, None, None]
+    assert results[3][0] == 429 and "manually" in results[3][1]
+    assert lim.check("/match", ips[0]) is None                 # non-AI routes unaffected
+    # the next UTC day starts a new budget
+    assert lim.check("/explain", "198.51.100.9", now=time.time() + 86400) is None
+
+
+def test_heavy_endpoint_and_body_size_limits(monkeypatch):
+    _tight_limits(monkeypatch)
+    batch = {"requests": SCENARIO, "max_suppliers_per_request": 2}
+    assert client.post("/match/batch", json=batch).status_code == 200
+    assert client.post("/match/batch", json=batch).status_code == 429
+    big = {"text": "x" * 5000}
+    r = client.post("/parse-request", json=big)
+    assert r.status_code == 413 and r.json() == {"error": "Request body too large."}
+
+
+def test_429_is_readable_by_the_browser(monkeypatch):
+    _tight_limits(monkeypatch, RATE_LIMIT_PER_MIN="0")
+    r = client.post("/match", json=R(1, "chairs", 5, 21, 23, "Lara"),
+                    headers={"Origin": "https://reloop.vercel.app"})
+    assert r.status_code == 429 and r.headers.get("access-control-allow-origin") == "https://reloop.vercel.app"
