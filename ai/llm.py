@@ -25,7 +25,9 @@ _cache: dict[str, tuple[float, dict]] = {}
 
 
 def enabled() -> bool:
-    return os.getenv("LLM_PROVIDER", "").strip().lower() == "anthropic"
+    """AI is ON only when a provider AND its key are set on the server. Otherwise no request is ever sent."""
+    return (os.getenv("LLM_PROVIDER", "").strip().lower() == "anthropic"
+            and bool(os.getenv("ANTHROPIC_API_KEY", "").strip()))
 
 
 def model() -> str:

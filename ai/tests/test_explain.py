@@ -49,6 +49,7 @@ def test_grounding_rejects_invented_numbers_and_claims():
 
 def _fake_llm(monkeypatch, data):
     monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
     monkeypatch.setattr(llm, "call_json", lambda *a, **k: data)
 
 

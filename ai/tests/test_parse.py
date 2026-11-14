@@ -52,6 +52,7 @@ def test_llm_disabled_uses_rules():
 
 def _fake_llm(monkeypatch, data):
     monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
     monkeypatch.setattr(llm, "call_json", lambda *a, **k: data)
 
 
@@ -121,3 +122,12 @@ def test_eval_quantity_phrasings():
 def test_llm_written_number_is_accepted(monkeypatch):
     _fake_llm(monkeypatch, {**GOOD_LLM, "needs": [{"category": "chairs", "quantity": 50, "label": "chairs"}]})
     assert service.parse("Fifty chairs near Lara on 21-23 Nov", TODAY).parser == "llm"
+
+
+def test_no_key_means_no_llm_call(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    called = []
+    monkeypatch.setattr(llm, "call_json", lambda *a, **k: called.append(1))
+    assert not llm.enabled()
+    assert service.parse(DEMO, TODAY).parser == "rules" and called == []
