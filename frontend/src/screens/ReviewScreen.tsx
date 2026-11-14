@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Icon } from "../components/Icon";
 import { Steps } from "../components/Steps";
-import { CATEGORIES, type Category, type Condition, type Need, type ParseOut } from "../lib/types";
+import { CATEGORIES, type Category, type Condition, type Need, type ParseOut, type Priority } from "../lib/types";
 import { PRESETS } from "../lib/presets";
 
 export interface ReviewedRequest {
@@ -11,7 +11,15 @@ export interface ReviewedRequest {
   location: string; // preset id
   minCondition: Condition | "";
   maxDistanceKm: string;
+  priority: Priority;
 }
+
+const PRIORITIES: { id: Priority; label: string }[] = [
+  { id: "balanced", label: "Balanced" },
+  { id: "closest", label: "Closest" },
+  { id: "cheapest", label: "Cheapest" },
+  { id: "best_condition", label: "Best condition" },
+];
 
 interface Props {
   parsed: ParseOut | null; // null = parsing failed, user fills everything in
@@ -160,7 +168,21 @@ export function ReviewScreen({ parsed, parseNote, initial, onBack, onConfirm }: 
         )}
       </section>
 
-      <details className="panel panel--more">
+      <section className="panel" aria-labelledby="pr-h">
+        <h2 id="pr-h" className="panel__h">
+          <Icon name="sparkle" /> What matters most?
+        </h2>
+        <div className="chips" role="radiogroup" aria-labelledby="pr-h">
+          {PRIORITIES.map((p) => (
+            <button key={p.id} type="button" role="radio" aria-checked={r.priority === p.id}
+              className={`pchip ${r.priority === p.id ? "is-on" : ""}`} onClick={() => set("priority", p.id)}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <details className="panel panel--more" open={!!(r.minCondition || r.maxDistanceKm)}>
         <summary className="panel__h">Optional filters</summary>
         <div className="filters">
           <label className="date">

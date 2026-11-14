@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Header } from "./components/Header";
+import { MethodologySheet } from "./components/MethodologySheet";
 import { RequestScreen, type RequestDraft } from "./screens/RequestScreen";
 import { ReviewScreen, type ReviewedRequest } from "./screens/ReviewScreen";
 import { ResultsScreen, type NeedResult } from "./screens/ResultsScreen";
@@ -7,7 +8,7 @@ import { api, ApiError } from "./lib/api";
 import { API_URL, type DataMode } from "./lib/config";
 import { presetById } from "./lib/presets";
 import type { Explanation, InventorySource, MatchRequest, ParseOut } from "./lib/types";
-import { demoExplain, demoMatch, demoParse } from "./demo/engine";
+import { demoExplain, demoMatch, demoParse, DemoNotCovered } from "./demo/demo";
 
 type Step = "request" | "review" | "results";
 
@@ -24,6 +25,7 @@ function toReviewed(p: ParseOut, d: RequestDraft): ReviewedRequest {
     location: d.location || p.location.preset_id || "",
     minCondition: p.requirements.min_condition ?? "",
     maxDistanceKm: p.requirements.max_distance_km ? String(p.requirements.max_distance_km) : "",
+    priority: p.priority ?? "balanced",
   };
 }
 
@@ -39,6 +41,7 @@ export default function App() {
   const [results, setResults] = useState<NeedResult[]>([]);
   const [source, setSource] = useState<InventorySource | null>(null);
   const runId = useRef(0);
+  const [showMethod, setShowMethod] = useState(false);
 
   const go = (s: Step) => {
     setStep(s);
@@ -82,6 +85,7 @@ export default function App() {
       requirements: r.minCondition || r.maxDistanceKm
         ? { min_condition: r.minCondition || null, max_distance_km: r.maxDistanceKm ? Number(r.maxDistanceKm) : null }
         : null,
+      priority: r.priority === "balanced" ? null : r.priority,
     }));
     setReviewed(r);
     setResults(r.needs.map((need) => ({ need, status: "loading" })));
@@ -97,12 +101,16 @@ export default function App() {
       try {
         response = m === "demo" ? demoMatch(req) : await api.match(req);
       } catch (e) {
-        update(i, { status: "error", error: e instanceof ApiError ? e.message : "unexpected error" });
+        update(i, {
+          status: e instanceof DemoNotCovered ? "not_in_demo" : "error",
+          error: e instanceof ApiError || e instanceof DemoNotCovered ? e.message : "unexpected error",
+        });
         return;
       }
       update(i, { status: "ok", response, explaining: response.matches.length > 0 });
       // /match says where its data came from (live database or the offline fictional dataset).
-      if (id === runId.current && response.inventory_source) setSource(response.inventory_source);
+      // Demo mode replays recorded responses, which is its own state.
+      if (id === runId.current && m === "live" && response.inventory_source) setSource(response.inventory_source);
       if (!response.matches.length) return;
       let exps: Explanation[];
       let explainNote: string | undefined;
@@ -145,12 +153,14 @@ export default function App() {
           dateLabel={`${fmtDate(reviewed.startDate)}–${fmtDate(reviewed.endDate)}`}
           onEdit={() => go("review")}
           onRetry={() => search(reviewed)}
+          onShowMethod={() => setShowMethod(true)}
           onSwitchToDemo={mode === "live" ? () => {
             setMode("demo");
             search(reviewed, "demo");
           } : undefined}
         />
       )}
+      {showMethod && <MethodologySheet mode={mode} onClose={() => setShowMethod(false)} />}
     </div>
   );
 }

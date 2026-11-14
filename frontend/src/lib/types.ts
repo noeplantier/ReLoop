@@ -29,6 +29,7 @@ export interface ParseOut {
     lon: number | null;
   };
   requirements: { min_condition: Condition | null; max_distance_km: number | null };
+  priority?: Priority | null; // set by the offline reader only; the backend parser does not return it
   missing_fields: ("needs" | "dates" | "location")[];
   warnings: string[];
   parser: "llm" | "rules";

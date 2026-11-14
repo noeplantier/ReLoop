@@ -2,6 +2,7 @@
 // offers the user an explicit choice (fill in manually / switch to demo inventory).
 import { API_URL } from "./config";
 import type { ExplainOut, InventorySource, MatchOut, MatchRequest, MatchResponse, Need, ParseOut } from "./types";
+import type { Methodology } from "../demo/demo";
 
 export class ApiError extends Error {
   constructor(message: string, readonly kind: "not_configured" | "network" | "timeout" | "http", readonly status?: number) {
@@ -45,6 +46,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   health: () => call<{ status: string; inventory_source: InventorySource }>("/health"),
+  methodology: () => call<Methodology>("/impact/methodology"),
   parse: (text: string, today: string) =>
     call<ParseOut>("/parse-request", { method: "POST", body: JSON.stringify({ text, context: { today } }) }),
   match: (req: MatchRequest) => call<MatchResponse>("/match", { method: "POST", body: JSON.stringify(req) }),

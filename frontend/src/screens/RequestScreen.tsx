@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Icon } from "../components/Icon";
 import { MAX_TEXT_CHARS, type DataMode } from "../lib/config";
 import { DEMO_REQUEST, PRESETS } from "../lib/presets";
+import { DEMO_EXAMPLES } from "../demo/demo";
 
 export interface RequestDraft {
   text: string;
@@ -67,17 +68,27 @@ export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit
             aria-describedby="need-hint"
           />
           <div id="need-hint" className="field__hint">
-            {touched && empty ? (
-              <span className="field__error">Describe what you need, in your own words.</span>
-            ) : (
-              <button
-                type="button"
-                className="chip"
-                onClick={() => setD({ ...DEMO_REQUEST })}
-              >
+            {touched && empty && <span className="field__error">Describe what you need, in your own words.</span>}
+            <div className="examples">
+              <button type="button" className="chip" onClick={() => setD({ ...DEMO_REQUEST })}>
                 <Icon name="sparkle" size={16} /> Try the Antalya demo request
               </button>
-            )}
+              <details className="examples__more">
+                <summary>More examples</summary>
+                <ul>
+                  {DEMO_EXAMPLES.filter((x) => x.id !== "main").map((x) => (
+                    <li key={x.id}>
+                      <button type="button" className="example" onClick={(e) => {
+                        setD({ text: x.text, startDate: x.startDate, endDate: x.endDate, location: x.location });
+                        (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
+                      }}>
+                        {x.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </div>
           </div>
         </div>
 
@@ -157,7 +168,7 @@ export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit
               className={`mode__opt ${mode === m ? "is-on" : ""}`}
               onClick={() => onModeChange(m)}
             >
-              {m === "live" ? "Live" : "Demo (fictional)"}
+              {m === "live" ? "Live" : "Demo (recorded examples)"}
             </button>
           ))}
         </div>

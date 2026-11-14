@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Icon } from "../components/Icon";
 import { Steps } from "../components/Steps";
 import type { Category, Explanation, InventorySource, MatchOut, MatchResponse, Need } from "../lib/types";
-import { co2Range } from "../demo/engine";
+import { co2Range } from "../demo/demo";
 
 export interface NeedResult {
   need: Need;
-  status: "loading" | "ok" | "error";
+  status: "loading" | "ok" | "error" | "not_in_demo";
   error?: string;
   response?: MatchResponse;
   explanations?: Record<string, Explanation>;
@@ -22,6 +22,7 @@ interface Props {
   onEdit: () => void;
   onRetry: () => void;
   onSwitchToDemo?: () => void;
+  onShowMethod: () => void;
 }
 
 const CAT_ICON: Record<Category, Parameters<typeof Icon>[0]["name"]> = {
@@ -30,21 +31,22 @@ const CAT_ICON: Record<Category, Parameters<typeof Icon>[0]["name"]> = {
 
 const SOURCE_TEXT: Record<InventorySource, string> = {
   supabase: "Live inventory",
-  json_fallback: "Backend offline dataset (fictional)",
-  browser_demo: "Demo inventory (fictional)",
+  json_fallback: "Live server, offline dataset (fictional)",
+  browser_demo: "Demo: recorded results (fictional)",
 };
 
 const tl = (x: number) => `TRY ${Math.round(x).toLocaleString("en-US")}`;
 
-export function ResultsScreen({ results, source, placeLabel, dateLabel, onEdit, onRetry, onSwitchToDemo }: Props) {
+export function ResultsScreen({ results, source, placeLabel, dateLabel, onEdit, onRetry, onSwitchToDemo, onShowMethod }: Props) {
   const anyError = results.some((r) => r.status === "error");
+  const anyNotInDemo = results.some((r) => r.status === "not_in_demo");
   return (
     <main className="page page--wide">
       <div className="topbar">
         <button className="link-back" onClick={onEdit}>
           <Icon name="back" size={18} /> Edit request
         </button>
-        {source && source !== "browser_demo" && <span className={`src src--${source}`}>{SOURCE_TEXT[source]}</span>}
+        {source && <span className={`src src--${source}`}>{SOURCE_TEXT[source]}</span>}
       </div>
       <Steps current={2} />
       <h1 className="page__title">Your reuse options</h1>
@@ -70,14 +72,28 @@ export function ResultsScreen({ results, source, placeLabel, dateLabel, onEdit, 
         </div>
       )}
 
+      {anyNotInDemo && (
+        <div className="notice notice--warn" role="status">
+          <Icon name="info" size={16} />
+          <span>
+            Demo mode only replays a few prepared examples recorded from our real backend, so some of your request has no
+            demo result. Choose a demo example on the first screen, or switch to Live inventory.
+          </span>
+        </div>
+      )}
+
       {results.map((r) => (
-        <NeedSection key={r.need.category} r={r} />
+        <NeedSection key={r.need.category} r={r} onShowMethod={onShowMethod} />
       ))}
+
+      <button className="link-method" onClick={onShowMethod}>
+        <Icon name="leaf" size={16} /> How we calculate the climate impact
+      </button>
     </main>
   );
 }
 
-function NeedSection({ r }: { r: NeedResult }) {
+function NeedSection({ r, onShowMethod }: { r: NeedResult; onShowMethod: () => void }) {
   const { need } = r;
   const matches = r.response?.matches ?? [];
   const best = matches[0];
@@ -115,6 +131,9 @@ function NeedSection({ r }: { r: NeedResult }) {
         </div>
       )}
       {r.status === "error" && <p className="err">Could not load options for {need.label}: {r.error}</p>}
+      {r.status === "not_in_demo" && (
+        <p className="empty">No demo result for {need.quantity} {need.label} with these details.</p>
+      )}
       {r.status === "ok" && matches.length === 0 && (
         <div className="empty">
           <p>No {need.label} are available for your full dates and filters.</p>
@@ -130,16 +149,16 @@ function NeedSection({ r }: { r: NeedResult }) {
         {matches.map((m, i) => (
           <OptionCard key={m.item_id} m={m} need={need} rank={i} days={r.response!.days}
             exp={r.explanations?.[m.item_id]} explaining={r.explaining} explainNote={r.explainNote}
-            costNote={r.response!.cost_note} />
+            costNote={r.response!.cost_note} onShowMethod={onShowMethod} />
         ))}
       </div>
     </section>
   );
 }
 
-function OptionCard({ m, need, rank, days, exp, explaining, explainNote, costNote }: {
+function OptionCard({ m, need, rank, days, exp, explaining, explainNote, costNote, onShowMethod }: {
   m: MatchOut; need: Need; rank: number; days: number; exp?: Explanation; explaining?: boolean; explainNote?: string;
-  costNote?: string;
+  costNote?: string; onShowMethod: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const missing = m.missing_quantity ?? need.quantity - m.quoted_quantity;
@@ -233,8 +252,10 @@ function OptionCard({ m, need, rank, days, exp, explaining, explainNote, costNot
               ) : (
                 <p>Not enough data to estimate the impact of this item.</p>
               )}
+              <p className="impact__basis">Scenario-based estimate, not measured or verified.</p>
+              <button className="link-inline" onClick={onShowMethod}>How we calculate →</button>
               <details>
-                <summary>View assumptions</summary>
+                <summary>View assumptions for this item</summary>
                 <ul className="plain small">
                   {m.impact.assumptions.map((a) => (
                     <li key={a}>{a}</li>
