@@ -257,3 +257,21 @@ def test_startup_warms_the_cache():
         assert inventory._cache["data"] is not None
         assert c.get("/health").json()["inventory_age_s"] is not None
     inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+
+
+def test_demo_fixtures_are_up_to_date():
+    """backend/fixtures/ feeds the web app's demo mode; it must equal what the engine returns now.
+    If this fails: python tools/export_demo_fixtures.py (then tell Sueda to copy the new files)."""
+    import json
+    from pathlib import Path
+    from tools import export_demo_fixtures as ex
+    scen, gold = ex.build()
+    d = Path(__file__).parent / "fixtures"
+    old_s = json.loads((d / "demo_scenarios.json").read_text(encoding="utf-8"))
+    old_g = json.loads((d / "match_golden.json").read_text(encoding="utf-8"))
+    assert old_g["cases"] == gold["cases"]
+    for sid, entry in scen["scenarios"].items():
+        assert old_s["scenarios"][sid]["request"] == entry["request"], sid
+        assert old_s["scenarios"][sid]["response"] == entry["response"], sid
+    assert old_s["main_demo_summary"] == scen["main_demo_summary"]
+    assert old_s["methodology"] == scen["methodology"]
