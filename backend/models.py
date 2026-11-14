@@ -104,6 +104,7 @@ class SummaryResponse(BaseModel):
     avoided_kgco2e: Optional[float]
     impact_status: Literal["sourced", "illustrative", "unavailable"]
     assumptions: list[str]
+    inventory_source: InventorySource
 
 
 class BatchRequest(BaseModel):

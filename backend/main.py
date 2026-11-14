@@ -1,6 +1,7 @@
 """Thin HTTP layer: load inventory, call match.py / impact.py, return JSON. No matching logic here."""
 import json
 import os
+import sys
 from pathlib import Path
 
 import logging
@@ -30,6 +31,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# AI layer (Sueda's `ai/` package at the repo root): POST /parse-request and POST /explain.
+# Optional on purpose: if the package is missing or fails to import, the matching API still starts
+# and those two routes simply do not exist. The LLM key is read inside ai/ from server env only.
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+try:
+    from ai.router import router as ai_router
+    app.include_router(ai_router)
+    AI_LAYER = True
+except Exception as e:  # noqa: BLE001 - never let the AI layer take /match down
+    log.warning("AI layer not loaded (%s); /parse-request and /explain unavailable", type(e).__name__)
+    AI_LAYER = False
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -127,4 +140,5 @@ def impact_summary(req: SummaryRequest):
     return {"reused_units": units, "total_distance_km": round(dist, 1),
             "estimated_cost_try": round(cost, 2) if any_cost else None,
             "avoided_kgco2e": round(avoided, 2) if any_avoided and status != "unavailable" else None,
-            "impact_status": status, "assumptions": assumptions}
+            "impact_status": status, "assumptions": assumptions,
+            "inventory_source": inv["source"]}

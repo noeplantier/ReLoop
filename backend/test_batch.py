@@ -202,3 +202,10 @@ def test_unreachable_database_url_falls_back_to_json(monkeypatch):
     inventory._cache.update(t=0.0, data=None)
     assert inventory.load_inventory(force_refresh=True)["source"] == "json_fallback"
     inventory._cache.update(t=0.0, data=None)
+
+
+def test_impact_summary_reports_inventory_source():
+    top = client.post("/match", json=R(1, "chairs", 50, 21, 23, "Lara")).json()["matches"][0]
+    sel = {"item_id": top["item_id"], "quantity": 50, "start_date": "2026-11-21",
+           "end_date": "2026-11-23", "location": {"lat": 36.853, "lon": 30.80}}
+    assert client.post("/impact/summary", json={"selections": [sel]}).json()["inventory_source"] == "json_fallback"

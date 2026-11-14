@@ -24,7 +24,7 @@ optimiser that shares scarce equipment fairly between several events.
   "estimated", "illustrative", "based on assumed weights". Never "measured" or "saved".
 - Robustness: small changes to the scoring weights keep the first recommendation in about 94% of
   test cases (docs/SCORING.md).
-- Tests: 33 automated backend tests + 31 database checks.
+- Tests: 34 automated backend tests + 31 database checks.
 
 ## AI vs not-AI (judges score "AI integration" and "awareness of limitations")
 - AI (Sueda's layer): understanding free-text requests, writing grounded explanations.

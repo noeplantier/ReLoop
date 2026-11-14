@@ -7,7 +7,9 @@
   tables; ReLoop's migrations do not touch them.
 - Read-only role `reloop_reader` (migration 0005) created on Supabase. Checked live: it can SELECT
   the 5 ReLoop tables only; the other 25 tables/views in the project (staff, payroll, ...) are not
-  readable; no insert/update/delete; no RLS bypass. Its password is NOT set yet (see below).
+  readable; no insert/update/delete; no RLS bypass. Password set by the team (not in git). Verified locally: the API reads the live inventory as
+  reloop_reader through the transaction pooler (5/5/30/31, ~3.6 s cold) and `tools/smoke.py` passes with
+  `inventory_source: supabase`.
 - Render: NOT deployed yet (waiting for access to the team workspace).
 
 ## Connecting the API with the read-only role (preferred over the service-role key)
@@ -23,9 +25,12 @@
 - After deploy: `python tools/smoke.py https://<service>.onrender.com --origin <frontend origin>`
   runs the main demo request and reports whether it used live Supabase or the offline fallback.
 
-Needs: a free Render account connected to the GitHub repo, and the Supabase URL + service-role key.
+Needs: access to the team's Render workspace (GitHub repo connected) and the `DATABASE_URL` above.
 
-1. Render > New > Blueprint > pick the repo (it reads `render.yaml`) or New Web Service with root dir `backend`.
+1. Render > New > Blueprint > pick the repo (it reads `render.yaml`). Manual alternative: New Web Service, root
+   directory EMPTY (repo root, because `ai/` sits next to `backend/`), build `pip install -r backend/requirements.txt
+   && if [ -f ai/requirements.txt ]; then pip install -r ai/requirements.txt; fi`, start
+   `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`, health check `/health`.
 2. Set environment variables in the Render dashboard (NOT in git):
    - `DATABASE_URL` (preferred, read-only role, see above), or `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (fallback). With none of them the API serves the built-in fictional JSON inventory.
    - `CORS_ORIGINS` = the deployed web app origin(s), comma separated (e.g. `https://reloop.vercel.app`). `*.vercel.app`, `*.netlify.app`, `*.onrender.com` are already allowed.

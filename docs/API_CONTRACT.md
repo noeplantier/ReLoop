@@ -70,7 +70,7 @@ Response
   "cost_note": "Rental price only (unit price x quantity x days). Delivery, deposit, setup and taxes are not included."
 }
 ```
-- `estimated_cost_try` = `unit_price_per_day_try * quantity * days`, or `null` for free loans / no price. Show `cost_note` next to it.
+- `estimated_cost_try` = `unit_price_per_day_try * quoted_quantity * days`, or `null` for free loans / no price. `days` counts both ends (21-23 Nov = 3). Show `cost_note` next to it.
 - `covers_quantity` is `false` when the item has fewer units than requested (shown but ranked lower). `missing_quantity` = requested − `quoted_quantity` (0 when covered). Never present a partial option as a complete solution.
 - `inventory_source`: `"supabase"` (live database) or `"json_fallback"` (offline fictional dataset, used when Supabase is unreachable). Same value as `/health`.
 - `matches` holds up to 3 options; fewer when fewer are feasible. A multi-item request ("50 chairs and 2 stage lights") = one `/match` call per category.
@@ -91,13 +91,15 @@ Response
   "estimated_cost_try": 1800.0,
   "avoided_kgco2e": 956.02,
   "impact_status": "illustrative",
-  "assumptions": ["..."]
+  "assumptions": ["..."],
+  "inventory_source": "supabase"
 }
 ```
 
-## Planned (Sueda / AI layer, may live in a separate module)
-- `POST /parse-request`: `{ "text": "50 chairs near Lara on 21-23 Nov" }` returns a `/match` request or a list of them.
-- `POST /explain`: `{ "request": {...}, "match": {...} }` returns `{ "explanation": "..." }`.
+## AI layer: POST /parse-request, POST /explain (owner: Sueda, `ai/`)
+Served by the same API (mounted in `main.py` if `ai/` is present). Shapes: `docs/API_CONTRACT_REVIEW.md` D5/D6 on
+branch `feat/web-ai`. `parser` / `explainer` say whether the LLM or the deterministic fallback answered.
+The LLM key is a server env var; without it both routes still answer (rules / templates).
 
 ## POST /match/batch
 Several requests (2-10) that compete for the same stock. Returns a greedy baseline and the MILP optimum side by side.
