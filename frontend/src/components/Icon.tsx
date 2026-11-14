@@ -1,5 +1,7 @@
 // Small inline icon set (stroke icons, 24px grid). Decorative unless a label is given.
-type Name = "chair" | "calendar" | "pin" | "search" | "arrow" | "leaf" | "sparkle" | "chevron";
+type Name =
+  | "chair" | "calendar" | "pin" | "search" | "arrow" | "leaf" | "sparkle" | "chevron"
+  | "back" | "plus" | "minus" | "x" | "check" | "warn" | "info" | "light" | "table" | "stage" | "sign";
 
 const paths: Record<Name, JSX.Element> = {
   chair: (
@@ -36,6 +38,47 @@ const paths: Record<Name, JSX.Element> = {
   ),
   sparkle: <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />,
   chevron: <path d="M6 9l6 6 6-6" />,
+  back: <path d="M15 5l-7 7 7 7" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
+  x: <path d="M6 6l12 12M18 6L6 18" />,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
+  warn: (
+    <>
+      <path d="M12 3.5l9.5 16.5h-19z" />
+      <path d="M12 10v4.5M12 17.5v.01" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5.5M12 7.5v.01" />
+    </>
+  ),
+  light: (
+    <>
+      <path d="M8 4h8l-1.5 7h-5z" />
+      <path d="M12 11v3M8 21h8M12 14l-3 7M12 14l3 7" />
+    </>
+  ),
+  table: (
+    <>
+      <path d="M3 8h18v3H3z" />
+      <path d="M6 11v9M18 11v9" />
+    </>
+  ),
+  stage: (
+    <>
+      <path d="M3 14h18v6H3z" />
+      <path d="M6 14V6h12v8M3 6h18" />
+    </>
+  ),
+  sign: (
+    <>
+      <rect x="4" y="4" width="16" height="10" rx="1.5" />
+      <path d="M12 14v7M9 21h6" />
+    </>
+  ),
 };
 
 export function Icon({ name, size = 20, label }: { name: Name; size?: number; label?: string }) {

@@ -1,0 +1,48 @@
+{
+  "_README": "Values marked 'sourced' were read directly from the official UK Government GHG Conversion Factors 2025 flat file (published 10 June 2025). DEFRA has no per-chair/table/light factors, so avoided emissions are DERIVED per item as weight x material factor. Item weights/materials are rough estimates for fictional demo data (weight_is_estimate), so results are labelled 'illustrative', never verified.",
+  "source_dataset": {
+    "name": "UK Government GHG Conversion Factors for Company Reporting 2025 (DESNZ/Defra)",
+    "published": "2025-06-10",
+    "url": "https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025",
+    "file": "ghg-conversion-factors-2025-flat-format.xlsx, sheet 'Factors by Category'",
+    "licence": "Open Government Licence v3.0",
+    "caveat": "UK factors, used as a proxy for Turkey. Not specific to Turkish fleets or materials."
+  },
+  "transport_kgco2e_per_tonne_km": {
+    "value": 0.19748,
+    "source": "DESNZ/Defra 2025, Freighting goods > HGV (all diesel) > All rigids, Average laden, tonne.km, kg CO2e (Scope 3, excludes well-to-tank)",
+    "alternatives": {
+      "all_hgvs_average_laden": 0.10163
+    },
+    "status": "sourced",
+    "note": "Rigid trucks chosen as the typical local delivery vehicle. Used only when an item weight is known."
+  },
+  "material_kgco2e_per_tonne_primary_production": {
+    "_note": "Emissions of making 1 tonne of NEW material. Embodied emissions of a new item ~ weight_kg/1000 x factor. The material assigned to each item is an assumption.",
+    "wood": {
+      "value": 269.50416,
+      "source": "DESNZ/Defra 2025, Material use > Construction > Wood, Primary material production, tonnes",
+      "status": "sourced"
+    },
+    "metals": {
+      "value": 3824.09335,
+      "source": "DESNZ/Defra 2025, Material use > Construction > Metals, Primary material production, tonnes",
+      "status": "sourced"
+    },
+    "plastics_rigid": {
+      "value": 3354.28062,
+      "source": "DESNZ/Defra 2025, Material use > Plastic > Plastics: average plastic rigid, Primary material production, tonnes",
+      "status": "sourced"
+    },
+    "electrical_large": {
+      "value": 3267.0,
+      "source": "DESNZ/Defra 2025, Material use > Electrical items > Electrical items - large, Primary material production, tonnes",
+      "status": "sourced"
+    },
+    "electrical_small": {
+      "value": 5647.94563,
+      "source": "DESNZ/Defra 2025, Material use > Electrical items > Electrical items - small, Primary material production, tonnes",
+      "status": "sourced"
+    }
+  }
+}
