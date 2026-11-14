@@ -1,7 +1,7 @@
 """Smoke test against a running ReLoop API (local or deployed). Standard library only.
 
     python tools/smoke.py https://<service>.onrender.com
-    python tools/smoke.py http://localhost:8000 --origin http://localhost:5173
+    python tools/smoke.py http://127.0.0.1:8000 --origin http://localhost:5173   (127.0.0.1: "localhost" adds ~2 s on Windows)
 
 Runs the main demo journey ("50 chairs and 2 stage lights near Lara, 21-23 Nov 2026"),
 prints what the frontend would get, and exits non-zero if anything is wrong.

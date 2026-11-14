@@ -5,7 +5,11 @@ Base URL: `http://localhost:8000` (dev), public URL after deploy. JSON only. Dat
 All demo inventory is fictional. The mobile/web client never talks to Supabase; it only calls this API.
 
 ## GET /health
-`{ "status": "ok", "inventory_source": "supabase" | "json_fallback" }`
+`{ "status": "ok", "inventory_source": "supabase" | "json_fallback", "inventory_age_s": 12.3, "ai_layer": true, "llm_enabled": false, "commit": "00c802a" }`
+- `inventory_age_s`: seconds since the inventory copy was loaded. The API keeps a copy for 5 min and refreshes it in the
+  background; if a refresh fails it keeps the last live copy (still `supabase`) instead of switching to the fallback.
+- `ai_layer`: `/parse-request` and `/explain` are mounted. `llm_enabled`: they call the LLM (else rules/templates).
+- `commit`: deployed git commit (Render), `null` locally. Added 14 Nov, additive.
 
 ## GET /categories
 `[ { "slug": "chairs", "name": "Chairs", "unit_label": "chair" }, ... ]`

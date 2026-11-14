@@ -209,3 +209,51 @@ def test_impact_summary_reports_inventory_source():
     sel = {"item_id": top["item_id"], "quantity": 50, "start_date": "2026-11-21",
            "end_date": "2026-11-23", "location": {"lat": 36.853, "lon": 30.80}}
     assert client.post("/impact/summary", json={"selections": [sel]}).json()["inventory_source"] == "json_fallback"
+
+
+# --- warm start / stale-while-revalidate cache (roadmap 0.2) ---
+
+def _live_copy():
+    return {**_load_json(), "source": "supabase"}
+
+
+def test_stale_copy_served_immediately_and_refreshed_in_background(monkeypatch):
+    import inventory, time
+    calls = []
+    def slow_load():
+        calls.append(1)
+        time.sleep(0.3)
+        return _live_copy()
+    monkeypatch.setattr(inventory, "_load_supabase", slow_load)
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+    assert inventory.load_inventory()["source"] == "supabase"          # first load waits
+    inventory._cache["t"] = time.time() - inventory.CACHE_SECONDS - 1     # make it stale
+    t0 = time.time()
+    assert inventory.load_inventory()["source"] == "supabase"
+    assert time.time() - t0 < 0.1                                         # did NOT wait for the DB
+    time.sleep(0.5)
+    assert len(calls) == 2                                                # background refresh ran
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+
+
+def test_failed_refresh_keeps_last_live_copy(monkeypatch):
+    import inventory
+    monkeypatch.setattr(inventory, "_load_supabase", _live_copy)
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+    assert inventory.load_inventory()["source"] == "supabase"
+    def down():
+        raise RuntimeError("network")
+    monkeypatch.setattr(inventory, "_load_supabase", down)
+    assert inventory.load_inventory(force_refresh=True)["source"] == "supabase"   # not json_fallback
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+    assert inventory.load_inventory()["source"] == "json_fallback"    # nothing live yet -> fallback
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+
+
+def test_startup_warms_the_cache():
+    import inventory
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)
+    with TestClient(app) as c:                     # `with` runs the lifespan (startup)
+        assert inventory._cache["data"] is not None
+        assert c.get("/health").json()["inventory_age_s"] is not None
+    inventory._cache.update(t=0.0, loaded_at=0.0, data=None)

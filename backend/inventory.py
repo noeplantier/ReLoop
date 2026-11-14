@@ -16,6 +16,7 @@ Both sources are normalised to the same shape:
 import json
 import logging
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -27,9 +28,11 @@ log = logging.getLogger("reloop.inventory")
 load_dotenv(Path(__file__).parent / ".env")
 
 FALLBACK = Path(__file__).parent / "data" / "inventory.json"
-CACHE_SECONDS = 30
+CACHE_SECONDS = 300          # demo inventory changes rarely; stale copies are refreshed in the background
 SUPABASE_TIMEOUT_S = 5
-_cache = {"t": 0.0, "data": None}
+# t = last refresh attempt, loaded_at = when `data` was actually loaded
+_cache = {"t": 0.0, "loaded_at": 0.0, "data": None}
+_lock = threading.Lock()
 
 
 def _load_json():
@@ -104,17 +107,52 @@ def _load_supabase():
     }
 
 
-def load_inventory(force_refresh=False):
-    now = time.time()
-    if not force_refresh and _cache["data"] and now - _cache["t"] < CACHE_SECONDS:
-        return _cache["data"]
+def _refresh():
+    """Load once and store. A Supabase failure keeps the last good live copy (if any) instead of
+    dropping to the JSON fallback, so a short network blip never changes what the demo shows."""
     try:
         data = _load_supabase()
         if not data["items"]:
             raise RuntimeError("Supabase returned no inventory rows")
-    except Exception as e:   # any failure -> offline fallback, never crash the demo
+    except Exception as e:   # any failure -> keep last live copy, else offline fallback
+        prev = _cache["data"]
+        if prev is not None and prev["source"] == "supabase":
+            log.warning("Supabase refresh failed (%s); keeping last live copy", type(e).__name__)
+            _cache["t"] = time.time()          # retry after the next TTL, not on every request
+            return prev
         log.warning("Supabase unavailable (%s); using JSON fallback", type(e).__name__)
         data = _load_json()
     log.info("Inventory source: %s (%d items)", data["source"], len(data["items"]))
-    _cache.update(t=now, data=data)
+    _cache.update(t=time.time(), loaded_at=time.time(), data=data)
     return data
+
+
+def _refresh_in_background():
+    if not _lock.acquire(blocking=False):      # a refresh is already running
+        return
+    def run():
+        try:
+            _refresh()
+        finally:
+            _lock.release()
+    threading.Thread(target=run, daemon=True).start()
+
+
+def load_inventory(force_refresh=False):
+    """Fresh copy -> return it. Stale copy -> return it now and refresh in the background
+    (requests never wait on the database once something is loaded). Nothing yet -> load now."""
+    data = _cache["data"]
+    if data is not None and not force_refresh:
+        if time.time() - _cache["t"] >= CACHE_SECONDS:
+            _refresh_in_background()
+        return data
+    with _lock:
+        return _refresh()
+
+
+def status():
+    """For /health: where the current copy came from and how old it is (seconds)."""
+    data = _cache["data"]
+    if data is None:
+        return {"source": None, "age_s": None}
+    return {"source": data["source"], "age_s": round(time.time() - _cache["loaded_at"], 1)}

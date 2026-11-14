@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -13,13 +14,25 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import impact
 import match
+import inventory
 from inventory import load_inventory
 from models import (BatchRequest, BatchResponse, MatchRequest, MatchResponse, SummaryRequest,
                     SummaryResponse)
 
 log = logging.getLogger("reloop.api")
 
-app = FastAPI(title="ReLoop API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app):
+    # Warm start: load the inventory once at boot (the database is far away and the free host
+    # sleeps), so the first search of a demo does not wait for it.
+    try:
+        load_inventory()
+    except Exception as e:  # noqa: BLE001 - never block startup
+        log.warning("Warm-up failed (%s); first request will load", type(e).__name__)
+    yield
+
+
+app = FastAPI(title="ReLoop API", version="0.1.0", lifespan=lifespan)
 
 # Extra allowed origins (e.g. the deployed web app) via CORS_ORIGINS="https://a.app,https://b.app"
 EXTRA_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
@@ -66,9 +79,25 @@ COST_NOTE = ("Rental price only (unit price x quantity x days). Delivery, deposi
 FACTORS = json.loads((Path(__file__).parent / "impact_factors.json").read_text(encoding="utf-8"))
 
 
+def _llm_enabled():
+    """True only if the AI layer is loaded AND configured to call an LLM (else rules/templates)."""
+    if not AI_LAYER:
+        return False
+    try:
+        from ai import llm
+        return bool(llm.enabled())
+    except Exception:  # noqa: BLE001
+        return False
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "inventory_source": load_inventory()["source"]}
+    load_inventory()
+    st = inventory.status()
+    commit = os.getenv("RENDER_GIT_COMMIT") or None
+    return {"status": "ok", "inventory_source": st["source"], "inventory_age_s": st["age_s"],
+            "ai_layer": AI_LAYER, "llm_enabled": _llm_enabled(),
+            "commit": commit[:7] if commit else None}
 
 
 @app.get("/categories")

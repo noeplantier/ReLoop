@@ -88,7 +88,12 @@ client = TestClient(app)
 
 
 def test_api_health_uses_fallback():
-    assert client.get("/health").json() == {"status": "ok", "inventory_source": "json_fallback"}
+    h = client.get("/health").json()
+    assert h["status"] == "ok" and h["inventory_source"] == "json_fallback"
+    # additive fields (14 Nov): age of the loaded copy, AI layer state, deployed commit
+    assert isinstance(h["inventory_age_s"], float) and h["inventory_age_s"] >= 0
+    assert isinstance(h["ai_layer"], bool) and h["llm_enabled"] is False
+    assert "commit" in h
 
 
 def test_api_match_contract_and_no_invented_impact():
