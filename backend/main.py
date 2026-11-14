@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import impact
 import match
 import inventory
+import ratelimit
 from inventory import load_inventory
 from models import (BatchRequest, BatchResponse, MatchRequest, MatchResponse, SummaryRequest,
                     SummaryResponse)
@@ -33,6 +34,22 @@ async def lifespan(app):
 
 
 app = FastAPI(title="ReLoop API", version="0.1.0", lifespan=lifespan)
+
+LIMITS = ratelimit.Limits()
+
+
+# Added BEFORE CORS on purpose: the CORS middleware wraps it, so a browser can read a 429 too.
+@app.middleware("http")
+async def request_limits(request: Request, call_next):
+    if request.method == "POST":
+        size = request.headers.get("content-length")
+        if size and size.isdigit() and int(size) > LIMITS.max_body:
+            return JSONResponse(status_code=413, content={"error": "Request body too large."})
+        denied = LIMITS.check(request.url.path, ratelimit.client_ip(request))
+        if denied:
+            return JSONResponse(status_code=denied[0], content={"error": denied[1]},
+                                headers={"Retry-After": "60"})
+    return await call_next(request)
 
 # Extra allowed origins (e.g. the deployed web app) via CORS_ORIGINS="https://a.app,https://b.app"
 EXTRA_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
@@ -97,7 +114,8 @@ def health():
     commit = os.getenv("RENDER_GIT_COMMIT") or None
     return {"status": "ok", "inventory_source": st["source"], "inventory_age_s": st["age_s"],
             "ai_layer": AI_LAYER, "llm_enabled": _llm_enabled(),
-            "commit": commit[:7] if commit else None}
+            "commit": commit[:7] if commit else None,
+            "ai_requests_today": LIMITS.ai_used_today(), "ai_daily_limit": LIMITS.ai_per_day}
 
 
 @app.get("/categories")

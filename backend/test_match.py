@@ -6,6 +6,8 @@ import os
 os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = ""
 os.environ["DATABASE_URL"] = ""
+# Tests send hundreds of requests from one client: lift the public request limits (tested separately).
+os.environ.update(RATE_LIMIT_PER_MIN="1000000", HEAVY_RATE_LIMIT_PER_MIN="1000000", AI_RATE_LIMIT_PER_MIN="1000000", AI_DAILY_LIMIT="1000000")
 
 from fastapi.testclient import TestClient
 

@@ -70,6 +70,6 @@ equal weights             : top-1 same as default in 21/30 requests, top-3 set i
 
 ## 5. Tests
 
-- Backend automated tests: 40
+- Backend automated tests: 45
 - Database checks (PGlite): 31 passed, 0 failed
 

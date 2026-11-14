@@ -34,6 +34,10 @@ Needs: access to the team's Render workspace (GitHub repo connected) and the `DA
 2. Set environment variables in the Render dashboard (NOT in git):
    - `DATABASE_URL` (preferred, read-only role, see above), or `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (fallback). With none of them the API serves the built-in fictional JSON inventory.
    - `CORS_ORIGINS` = the deployed web app origin(s), comma separated (e.g. `https://reloop.vercel.app`). `*.vercel.app`, `*.netlify.app`, `*.onrender.com` are already allowed.
+   - Optional request limits (defaults in brackets): `RATE_LIMIT_PER_MIN` (60), `HEAVY_RATE_LIMIT_PER_MIN` (10),
+     `AI_RATE_LIMIT_PER_MIN` (10), `AI_DAILY_LIMIT` (300 AI requests per UTC day, all clients), `MAX_BODY_BYTES` (65536).
+   - AI stays OFF (rules/templates, labelled) unless `LLM_PROVIDER=anthropic` AND `ANTHROPIC_API_KEY` are set. Verified:
+     with the provider set but no key, the SDK fails before any request is sent and the fallback answers.
 3. Check `https://<service>.onrender.com/health` returns `{"status":"ok","inventory_source":"supabase"}` (or `json_fallback`).
 4. Free plan sleeps after ~15 min idle and the first request can take ~30-60 s. Before judging or recording the demo, open `/health` to wake it, and tell the frontend to show a loading state.
 5. Docker alternative: `docker build -t reloop-api backend && docker run -p 8000:8000 --env-file backend/.env reloop-api`.

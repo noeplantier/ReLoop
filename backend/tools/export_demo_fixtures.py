@@ -27,7 +27,9 @@ HERE = Path(__file__).resolve().parent
 BACKEND = HERE.parent
 OUT = BACKEND / "fixtures"
 sys.path.insert(0, str(BACKEND))
-os.environ.update(SUPABASE_URL="", SUPABASE_SERVICE_ROLE_KEY="", DATABASE_URL="", LLM_PROVIDER="none")
+os.environ.update(SUPABASE_URL="", SUPABASE_SERVICE_ROLE_KEY="", DATABASE_URL="", LLM_PROVIDER="none",
+                  RATE_LIMIT_PER_MIN="1000000", HEAVY_RATE_LIMIT_PER_MIN="1000000",
+                  AI_RATE_LIMIT_PER_MIN="1000000", AI_DAILY_LIMIT="1000000")
 
 # Same presets as the AI layer (ai/presets.py): labelled demo points, not addresses.
 PRESETS = {

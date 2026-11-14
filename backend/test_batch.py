@@ -5,7 +5,10 @@ import os
 os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = ""
 os.environ["DATABASE_URL"] = ""
+# Tests send hundreds of requests from one client: lift the public request limits (tested separately).
+os.environ.update(RATE_LIMIT_PER_MIN="1000000", HEAVY_RATE_LIMIT_PER_MIN="1000000", AI_RATE_LIMIT_PER_MIN="1000000", AI_DAILY_LIMIT="1000000")
 
+import time
 from collections import defaultdict
 
 from fastapi.testclient import TestClient
@@ -275,3 +278,56 @@ def test_demo_fixtures_are_up_to_date():
         assert old_s["scenarios"][sid]["response"] == entry["response"], sid
     assert old_s["main_demo_summary"] == scen["main_demo_summary"]
     assert old_s["methodology"] == scen["methodology"]
+
+
+# --- public request limits (Noé: required before paid AI is exposed) ---
+
+def _tight_limits(monkeypatch, **env):
+    import main, ratelimit
+    for k, v in {"RATE_LIMIT_PER_MIN": "3", "HEAVY_RATE_LIMIT_PER_MIN": "1", "AI_RATE_LIMIT_PER_MIN": "2",
+                 "AI_DAILY_LIMIT": "3", "MAX_BODY_BYTES": "2000", **env}.items():
+        monkeypatch.setenv(k, v)
+    lim = ratelimit.Limits()
+    monkeypatch.setattr(main, "LIMITS", lim)
+    return lim
+
+
+def test_rate_limit_per_ip_returns_429_with_error_format(monkeypatch):
+    _tight_limits(monkeypatch)
+    body = R(1, "chairs", 5, 21, 23, "Lara")
+    codes = [client.post("/match", json=body).status_code for _ in range(4)]
+    assert codes == [200, 200, 200, 429]
+    r = client.post("/match", json=body)
+    assert r.json()["error"].startswith("Too many requests") and r.headers["retry-after"] == "60"
+    # another client (behind the proxy) is not affected
+    assert client.post("/match", json=body, headers={"X-Forwarded-For": "203.0.113.7"}).status_code == 200
+    assert client.get("/health").status_code == 200          # GETs are never limited
+
+
+def test_ai_routes_have_a_global_daily_cap(monkeypatch):
+    lim = _tight_limits(monkeypatch)
+    ips = ["198.51.100.1", "198.51.100.2", "198.51.100.3", "198.51.100.4"]
+    # different clients, so only the GLOBAL daily cap (3) can stop the 4th
+    results = [lim.check("/parse-request", ip) for ip in ips]
+    assert results[:3] == [None, None, None]
+    assert results[3][0] == 429 and "manually" in results[3][1]
+    assert lim.check("/match", ips[0]) is None                 # non-AI routes unaffected
+    # the next UTC day starts a new budget
+    assert lim.check("/explain", "198.51.100.9", now=time.time() + 86400) is None
+
+
+def test_heavy_endpoint_and_body_size_limits(monkeypatch):
+    _tight_limits(monkeypatch)
+    batch = {"requests": SCENARIO, "max_suppliers_per_request": 2}
+    assert client.post("/match/batch", json=batch).status_code == 200
+    assert client.post("/match/batch", json=batch).status_code == 429
+    big = {"text": "x" * 5000}
+    r = client.post("/parse-request", json=big)
+    assert r.status_code == 413 and r.json() == {"error": "Request body too large."}
+
+
+def test_429_is_readable_by_the_browser(monkeypatch):
+    _tight_limits(monkeypatch, RATE_LIMIT_PER_MIN="0")
+    r = client.post("/match", json=R(1, "chairs", 5, 21, 23, "Lara"),
+                    headers={"Origin": "https://reloop.vercel.app"})
+    assert r.status_code == 429 and r.headers.get("access-control-allow-origin") == "https://reloop.vercel.app"

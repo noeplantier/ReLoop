@@ -20,7 +20,9 @@ BACKEND = HERE.parent
 ROOT = BACKEND.parent
 sys.path.insert(0, str(BACKEND))
 # Reproducible: never the live database, never an LLM.
-os.environ.update(SUPABASE_URL="", SUPABASE_SERVICE_ROLE_KEY="", DATABASE_URL="", LLM_PROVIDER="none")
+os.environ.update(SUPABASE_URL="", SUPABASE_SERVICE_ROLE_KEY="", DATABASE_URL="", LLM_PROVIDER="none",
+                  RATE_LIMIT_PER_MIN="1000000", HEAVY_RATE_LIMIT_PER_MIN="1000000",
+                  AI_RATE_LIMIT_PER_MIN="1000000", AI_DAILY_LIMIT="1000000")
 
 from fastapi.testclient import TestClient  # noqa: E402
 

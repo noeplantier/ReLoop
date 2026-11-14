@@ -146,6 +146,10 @@ Response
 
 ## Errors
 Invalid input: HTTP 422 (FastAPI default). Other errors: `{ "error": "message" }` (404 unknown id, 500 `internal error`, 503 batch solver unavailable).
+Request limits (added 14 Nov, POST only, per client IP per minute): 60 general, 10 for `/match/batch`, 10 for `/parse-request` +
+`/explain`, and a global cap of 300 AI requests per UTC day. Over a limit: HTTP 429 `{ "error": "..." }` with `Retry-After: 60`
+(the AI cap message says the request can still be filled in manually). Bodies over 64 KB: HTTP 413. `/health` shows
+`ai_requests_today` and `ai_daily_limit`. All limits are env vars (see `docs/DEPLOY.md`).
 CORS allows `http://localhost:5173`, `http://localhost:3000`, `http://localhost:8081`, plus the deployed web origin.
 
 ## Open points
