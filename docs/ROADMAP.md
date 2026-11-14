@@ -3,6 +3,33 @@
 Audience: the coding agent (Claude Opus 5.5) working in this checkout with Atay, and the team.
 Read `CLAUDE.md` first. This file says WHAT to build, in what order, and how to know it is done.
 
+## 0. Status board (updated Sat 14 Nov, 22:15 TR)
+
+Official deadlines (handbook 10.1): core development closes **Sun 15 Nov 23:59 TR**; submission **Mon 16 Nov 12:00 TR**.
+Team targets: full phone journey Sun 15:00, feature freeze Sun 19:00. Runtime AI budget: zero (labelled fallback).
+
+| Task | State | Owner / waiting on |
+|---|---|---|
+| 0.1 Deploy | Config + DATABASE_URL sent; Render service not created yet. Fresh-clone rehearsal of Render's exact build/start PASSED (live Supabase, CORS from *.vercel.app, no secret in logs) | Noé (his Render account) |
+| 0.2 Warm start, cache, richer /health | Done | |
+| 0.3 CI | Approved by Noé; `.github/workflows/ci.yml` (backend + DB + ai tests, no secrets). Keep-warm: not added (Free plan, wake manually) | |
+| 1.1 /impact/methodology | Done | |
+| 1.2 Carbon range | Done (assumed 10 uses, labelled) | |
+| 1.3 Priority presets | Done | |
+| 2.1 /plan | DEFERRED (Noé, 14 Nov): only after the phone journey works, as a small time-boxed proposal that does not touch matching or force a frontend rewrite | |
+| 2.2 Shared-stock story | Done (in docs/PITCH_NUMBERS.md) | |
+| 2.3 LLM live | llm.py verified against SDK 2.8.0 (mocked); AI off without key (verified) | Noé: provider + budget; Sueda: merge feat/web-ai |
+| 2.4 AI eval | Rules: 20/30, 0/8 ungrounded (docs/AI_EVAL_RULES.md). LLM run pending | key |
+| 3.1 Deployed e2e | `tools/smoke.py` ready | backend URL |
+| 3.2 Frontend notes | Sent to Sueda | |
+| 3.3 Backup video | | Noé / Sueda |
+| Extra: request limits (Noé) | Done: per-IP + 300 AI requests/day cap | |
+| Extra: demo fixtures | Done: backend/fixtures + staleness test | |
+| 4.1 Pitch numbers | Done (regenerate after any backend change) | |
+| 4.2 README | Draft in docs/README_DRAFT.md | Noé |
+| 4.3 Submission form + AI disclosure | | Team, before Mon 09:00 |
+| 4.4 Demo script | Done (docs/DEMO_SCRIPT.md) | |
+
 ## 1. Where we are (commit 00c802a)
 
 Works and is tested:

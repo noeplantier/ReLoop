@@ -1,0 +1,50 @@
+# Minimal CI: automated tests on every push and pull request.
+# No secrets and no network access to the live Supabase project: backend tests force the offline
+# fictional inventory, database checks run on an in-process Postgres (PGlite), AI tests never call an LLM.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ""
+      SUPABASE_URL: ""
+      SUPABASE_SERVICE_ROLE_KEY: ""
+      LLM_PROVIDER: "none"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"          # same major/minor as Render (PYTHON_VERSION 3.12.7)
+      - name: Install (same commands as the Render build)
+        run: |
+          pip install -r backend/requirements.txt
+          if [ -f ai/requirements.txt ]; then pip install -r ai/requirements.txt; fi
+      - name: Backend tests
+        working-directory: backend
+        run: python -m pytest -q
+      - name: AI layer tests (if ai/ is on this branch)
+        if: hashFiles('ai/tests/**') != ''
+        run: python -m pytest -q ai/tests
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Migrations + seed + rules on PGlite
+        working-directory: supabase/tests
+        run: |
+          npm ci
+          npm test

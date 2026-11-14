@@ -22,7 +22,7 @@ All inventory is fictional; say so once, at the start.
 | 3 | 0:30 | Review screen: 50 chairs, 2 stage lights, 21–23 Nov, Lara (demo preset), label "Read by AI" or "standard rules" | "AI turns the text into a request, and you check it. It never guesses: anything it cannot read, it asks. Here it got everything." |
 | 4 | 0:50 | Results, chairs: 7 eligible options, top 3 shown. Best: Stackable banquet chairs, Demo Lara Event Hall, 0 km, 50/50, TRY 1,800 for 3 days, "Delivery and deposit not included". Source badge. | "These are real availability checks: the whole date range, enough stock, loan or rental only. The badge says this came from our live database." |
 | 5 | 1:15 | Lighting: 2 options. Best: Stage par lights LED, Konyaalti, 14.5 km, 2/2, TRY 420. Point at "not a combined package". | "Chairs and lights are separate offers. We never pretend one supplier covers everything unless the engine checked it." (If `/plan` is approved and in the UI: "And here the engine found one supplier, Konyaalti, that covers both: one pickup.") |
-| 6 | 1:35 | Tap "View details" on the best chairs: reasons, things to check, Climate impact with the range, then "View assumptions" | "Why this option: closest, excellent condition, fair price. The climate estimate is a range: about 96 to 956 kg CO2e avoided versus buying new chairs, from UK government factors, and every assumption is one tap away. Illustrative, because the item weights are estimates. We show our working instead of a big green number." Optional: whole request ≈ 99–990 kg CO2e. |
+| 6 | 1:35 | Tap "View details" on the best chairs: reasons, things to check, Climate impact with the range, then "View assumptions" | "Why this option: closest, excellent condition, fair price. The climate estimate is a range: about 96 to 956 kg CO2e avoided versus buying new chairs, from UK government factors, and every assumption is one tap away. It is a scenario-based estimate, not measured or verified impact: illustrative, because the item weights are estimates. Tap "How we calculate" for every factor and source. We show our working instead of a big green number." Optional: whole request ≈ 99–990 kg CO2e. |
 | 7 | 2:05 | Slide: three events, one chair stock (first come, first served: 2/3 events covered, 20 chairs short, 14.5 km; optimised: 3/3 covered, 0 short, 7.7 km) | "When several events want the same stock, first come first served leaves someone short. Our optimiser plans them together: in our demo scenario, every event is covered and pickups drop from 14.5 to 7.7 km. That is mathematical optimisation, not AI, and we say which is which." |
 | 8 | 2:30 | Slide: limits + next step | "What is honest to say: the data is fictional, availability is declared not booked, carbon uses UK factors as a proxy. Next: a pilot with 2–3 Antalya venues, real inventory, and real organiser requests." |
 | 9 | 2:50 | Logo | "ReLoop: reuse made the easy choice, with honest numbers." |
@@ -38,6 +38,8 @@ All inventory is fictional; say so once, at the start.
 | Robustness | "small changes to the scoring weights keep the first recommendation in about 94% of cases" |
 
 Never say: "saved", "measured", "verified", "always", or a percentage improvement in general.
+Never quote the upper carbon figure on its own: always the full range, called "estimated" / "illustrative",
+with the methodology (`GET /impact/methodology`, "How we calculate") one click away. (Team decision, 14 Nov.)
 
 ## Likely judge questions
 
