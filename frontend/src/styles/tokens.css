@@ -1,0 +1,54 @@
+/* ReLoop design tokens. Colours sampled from the original logo (relooplogo.jpg):
+   background #0B1828, "R" green #0AB567, loop mint #5EF0B2, wordmark white #FBFDFC. */
+:root {
+  /* brand */
+  --brand: #0ab567;          /* main colour: the darker green of the "R" */
+  --brand-hover: #0cc472;
+  --brand-pressed: #09a35c;
+  --mint: #5ef0b2;           /* secondary highlight, use sparingly */
+  --mint-soft: rgba(94, 240, 178, 0.12);
+
+  /* dark surfaces */
+  --bg: #0b1828;             /* logo background */
+  --bg-deep: #08121f;
+  --surface: #11243a;
+  --surface-2: #163049;
+  --line: rgba(251, 253, 252, 0.09);
+
+  /* text on dark */
+  --text: #fbfdfc;           /* logo wordmark white */
+  --text-2: #a7b4c2;         /* secondary, 7.9:1 on --bg */
+  --text-3: #7d8c9c;         /* hints, 4.9:1 on --bg */
+
+  /* light card (request form, as in the wireframe) */
+  --card-light: #f3f6f8;
+  --field: #ffffff;
+  --field-line: #d7dee5;
+  --ink: #0b1828;            /* text on light card */
+  --ink-2: #4a5868;          /* 7.0:1 on --card-light */
+
+  /* text on brand buttons: dark navy reads better than white on #0AB567 (6.6:1 vs 2.8:1) */
+  --on-brand: #06201a;
+
+  /* status */
+  --warn: #f5b83d;
+  --danger: #ff7a7a;
+
+  /* shape and spacing */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-pill: 999px;
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  --shadow-card: 0 18px 40px rgba(3, 9, 18, 0.45);
+  --focus: 0 0 0 3px rgba(94, 240, 178, 0.55);
+
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
