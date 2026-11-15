@@ -69,7 +69,7 @@ export function ReviewScreen({ parsed, parseNote, editing, initial, onBack, onCo
       ) : parsed ? (
         <p className="source-note">
           <Icon name="sparkle" size={16} />
-          {parsed.parser === "llm" ? "Read by AI from your text." : "Read from your text with standard rules (AI not used)."}{" "}
+          {parsed.parser === "llm" ? "Read by AI (LLM) from your text." : "Rules-based parsing · LLM disabled."}{" "}
           Please check it.
         </p>
       ) : (

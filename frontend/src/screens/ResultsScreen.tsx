@@ -98,6 +98,17 @@ export function ResultsScreen({
         </div>
       )}
 
+      {results.length > 1 && (
+        <nav className="jump" aria-label="Jump to equipment">
+          {results.map((r) => (
+            <a key={r.need.category} className="jump__chip" href={`#sec-${r.need.category}`}>
+              <Icon name={CAT_ICON[r.need.category]} size={16} /> {r.need.label}
+              {r.status === "ok" && <span className="jump__n">{r.response!.matches.length}</span>}
+            </a>
+          ))}
+        </nav>
+      )}
+
       {results.map((r) => (
         <NeedSection key={r.need.category} r={r} onShowMethod={onShowMethod} />
       ))}
@@ -122,6 +133,7 @@ export function ResultsScreen({
 
 function NeedSection({ r, onShowMethod }: { r: NeedResult; onShowMethod: () => void }) {
   const { need } = r;
+  const [collapsed, setCollapsed] = useState(false);
   const matches = r.response?.matches ?? [];
   const best = matches[0];
   const summary =
@@ -136,20 +148,27 @@ function NeedSection({ r, onShowMethod }: { r: NeedResult; onShowMethod: () => v
           : `Only partly covered · best option has ${best.quoted_quantity} of ${need.quantity}`;
 
   return (
-    <section className="need-sec" aria-labelledby={`h-${need.category}`}>
-      <header className="need-sec__head">
-        <span className="need-sec__icon">
-          <Icon name={CAT_ICON[need.category]} size={22} />
-        </span>
-        <div>
-          <h2 id={`h-${need.category}`} className="need-sec__title">
-            {need.quantity} {need.label}
-          </h2>
-          {summary && (
-            <p className={`need-sec__sum ${matches.length && best.covers_quantity ? "is-ok" : "is-warn"}`}>{summary}</p>
-          )}
-        </div>
-      </header>
+    <section className="need-sec" id={`sec-${need.category}`} aria-labelledby={`h-${need.category}`}>
+      <h2 className="need-sec__hwrap">
+        <button type="button" className="need-sec__head need-sec__toggle" aria-expanded={!collapsed}
+          aria-controls={`body-${need.category}`} onClick={() => setCollapsed((c) => !c)}>
+          <span className="need-sec__icon">
+            <Icon name={CAT_ICON[need.category]} size={22} />
+          </span>
+          <span className="need-sec__titles">
+            <span id={`h-${need.category}`} className="need-sec__title">
+              {need.quantity} {need.label}
+            </span>
+            {summary && (
+              <span className={`need-sec__sum ${matches.length && best.covers_quantity ? "is-ok" : "is-warn"}`}>{summary}</span>
+            )}
+          </span>
+          <span className={`need-sec__chev ${collapsed ? "" : "is-open"}`} aria-hidden="true">
+            <Icon name="chevron" size={20} />
+          </span>
+        </button>
+      </h2>
+      <div id={`body-${need.category}`} hidden={collapsed} className="need-sec__body">
 
       {r.status === "loading" && (
         <div className="skeleton" aria-busy="true" aria-label={`Loading ${need.label}`}>
@@ -178,6 +197,7 @@ function NeedSection({ r, onShowMethod }: { r: NeedResult; onShowMethod: () => v
             exp={r.explanations?.[m.item_id]} explaining={r.explaining} explainNote={r.explainNote}
             costNote={r.response!.cost_note} onShowMethod={onShowMethod} />
         ))}
+      </div>
       </div>
     </section>
   );
@@ -237,7 +257,7 @@ function OptionCard({ m, need, rank, days, exp, explaining, explainNote, costNot
         ) : null}
         {exp && (
           <span className={`src-chip ${exp.source === "llm" ? "src-chip--ai" : ""}`}>
-            {exp.source === "llm" ? "AI explanation, checked against engine data" : explainNote ? "Standard explanation (AI unavailable)" : "Standard explanation"}
+            {exp.source === "llm" ? "AI explanation, checked against engine data" : explainNote ? "Rules-based explanation · LLM unavailable" : "Rules-based explanation · LLM disabled"}
           </span>
         )}
       </div>
