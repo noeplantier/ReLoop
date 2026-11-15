@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Steps } from "../components/Steps";
-import { api, ApiError, type ShortlistCheckItem } from "../lib/api";
+import { api, ApiError, type ProgressOut, type ShortlistCheckItem } from "../lib/api";
+import { ProgressPanel } from "../components/ProgressPanel";
 import { CATEGORIES } from "../lib/types";
 import { presetById } from "../lib/presets";
 import { estimatedOpportunity, type StoredProject } from "../lib/project";
@@ -64,7 +65,54 @@ export function ShortlistScreen({ stored, saved, autoCheck, onBack, onEditReques
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.id]);
 
-  const opp = estimatedOpportunity(stored);
+  // Progress: evaluated by the server from the project (deterministic). Re-run when the substance changes
+  // (not on every rename keystroke), debounced.
+  const [progress, setProgress] = useState<ProgressOut | null>(null);
+  const [progLoading, setProgLoading] = useState(false);
+  const [progUnavailable, setProgUnavailable] = useState<string | null>(null);
+  const progKey = JSON.stringify([p.brief, p.shortlist.map((e) => [e.item_id, e.quantity]), p.events.length, p.mode]);
+  useEffect(() => {
+    if (p.mode === "demo") {
+      setProgress(null);
+      setProgUnavailable("Progress is evaluated by the live server, so it is not shown in demo mode.");
+      return;
+    }
+    let cancelled = false;
+    setProgLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const out = await api.progress(p);
+        if (cancelled) return;
+        setProgress(out);
+        setProgUnavailable(null);
+        // The evaluation includes a fresh availability re-check of the shortlist.
+        if (out.shortlist?.length) {
+          setCheck({ state: "done", at: new Date().toISOString(), source: out.inventory_source ?? "",
+                     items: Object.fromEntries(out.shortlist.map((i) => [i.item_id, i])) });
+        }
+      } catch (e) {
+        if (cancelled) return;
+        setProgress(null);
+        setProgUnavailable(e instanceof ApiError && e.status === 404
+          ? "Progress is not available on this server yet."
+          : `Could not load progress: ${e instanceof ApiError ? e.message : "unexpected error"}`);
+      } finally {
+        if (!cancelled) setProgLoading(false);
+      }
+    }, 600);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progKey]);
+
+  const local = estimatedOpportunity(stored);
+  const srv = progress?.estimated_opportunity;
+  // Prefer the server's figure (recomputed from current inventory); fall back to the engine numbers we kept.
+  const opp = srv && srv.kgco2e_upper != null
+    ? { lo: srv.kgco2e_conservative ?? srv.kgco2e_upper, hi: srv.kgco2e_upper, illustrative: srv.status !== "sourced" }
+    : local;
   const loc = presetById(p.brief.location.preset_id);
   const coverage = p.brief.needs.map((n) => {
     const got = p.shortlist.filter((e) => e.need_category === n.category).reduce((a, e) => a + e.quantity, 0);
@@ -83,6 +131,8 @@ export function ShortlistScreen({ stored, saved, autoCheck, onBack, onEditReques
     if (c.got < c.quantity) next.push(`Choose an option for ${c.label} (${c.quantity - c.got} still needed).`);
   }
   if (!next.length) next.push("Your shortlist is ready. Contacting suppliers is not part of this prototype.");
+  // When the server evaluated the project, its next step is the authoritative first item.
+  if (progress?.next_step && !next.includes(progress.next_step.text)) next.splice(0, next.length, progress.next_step.text);
 
   return (
     <main className="page page--wide">
@@ -191,6 +241,8 @@ export function ShortlistScreen({ stored, saved, autoCheck, onBack, onEditReques
           {next.map((x) => <li key={x}>{x}</li>)}
         </ul>
       </section>
+
+      <ProgressPanel progress={progress} loading={progLoading} unavailable={progUnavailable} />
 
       <div className="actions">
         <button className="btn btn--outline" onClick={onEditRequest}>Edit request</button>
