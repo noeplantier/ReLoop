@@ -36,6 +36,9 @@ Needs: access to the team's Render workspace (GitHub repo connected) and the `DA
    - `CORS_ORIGINS` = the deployed web app origin(s), comma separated (e.g. `https://reloop.vercel.app`). `*.vercel.app`, `*.netlify.app`, `*.onrender.com` are already allowed.
    - Optional request limits (defaults in brackets): `RATE_LIMIT_PER_MIN` (60), `HEAVY_RATE_LIMIT_PER_MIN` (10),
      `AI_RATE_LIMIT_PER_MIN` (10), `AI_DAILY_LIMIT` (300 AI requests per UTC day, all clients), `MAX_BODY_BYTES` (65536).
+   - `TRUSTED_PROXY_HOPS` (1): how many proxies in front of the app append to `X-Forwarded-For`. The per-IP limits use
+     the entry added by the nearest trusted proxy; client-sent entries are ignored (a forged first entry used to
+     bypass the limit, found on the deployed API on 15 Nov). `tools/smoke.py --check-limits` verifies it.
    - AI stays OFF (rules/templates, labelled) unless `LLM_PROVIDER=anthropic` AND `ANTHROPIC_API_KEY` are set. Verified:
      with the provider set but no key, the SDK fails before any request is sent and the fallback answers.
 3. Check `https://<service>.onrender.com/health` returns `{"status":"ok","inventory_source":"supabase"}` (or `json_fallback`).

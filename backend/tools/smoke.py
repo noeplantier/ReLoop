@@ -209,7 +209,13 @@ def main():
                 break
         check(got429 is not None and got429[1] == "60" and "error" in (got429[2] or {}),
               f"per-minute AI limit -> 429 after {got429[0] if got429 else '>11'} calls, Retry-After={got429[1] if got429 else None}")
-        print("       note: behind Render's proxy X-Forwarded-For may be overwritten; then the limit applies to this machine")
+        if got429:
+            # A forged X-Forwarded-For must not open a fresh bucket (the proxy's own entry decides).
+            code, _, _, _ = call(base, "POST", "/parse-request", {"text": "10 chairs in Lara on 21 Nov"},
+                                 headers={"X-Forwarded-For": "198.51.100.77"})
+            check(code == 429, f"forged X-Forwarded-For does not bypass the limit ({code})", blocker=False)
+            if code != 429:
+                print("       if this fails behind a proxy chain, set TRUSTED_PROXY_HOPS (docs/DEPLOY.md)")
 
     return report(source)
 

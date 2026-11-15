@@ -331,3 +331,34 @@ def test_429_is_readable_by_the_browser(monkeypatch):
     r = client.post("/match", json=R(1, "chairs", 5, 21, 23, "Lara"),
                     headers={"Origin": "https://reloop.vercel.app"})
     assert r.status_code == 429 and r.headers.get("access-control-allow-origin") == "https://reloop.vercel.app"
+
+
+def test_client_ip_cannot_be_spoofed_with_x_forwarded_for(monkeypatch):
+    """Found on the deployed API (15 Nov): a fake first X-Forwarded-For entry bypassed the per-IP limit.
+    The proxy appends the real address at the END; only that part is trusted."""
+    import ratelimit
+
+    class Req:
+        def __init__(self, xff, peer="10.0.0.1"):
+            self.headers = {"x-forwarded-for": xff} if xff is not None else {}
+            self.client = type("C", (), {"host": peer})()
+
+    monkeypatch.setenv("TRUSTED_PROXY_HOPS", "1")
+    real = "203.0.113.9"
+    assert ratelimit.client_ip(Req(real)) == real                                  # no client header
+    assert ratelimit.client_ip(Req(f"1.2.3.4, {real}")) == real                    # forged first entry ignored
+    assert ratelimit.client_ip(Req(f"5.6.7.8, 9.9.9.9, {real}")) == real
+    assert ratelimit.client_ip(Req(None)) == "10.0.0.1"                           # no proxy header: peer address
+    monkeypatch.setenv("TRUSTED_PROXY_HOPS", "2")                                  # two proxies append
+    assert ratelimit.client_ip(Req(f"1.2.3.4, {real}, 172.16.0.5")) == real
+    monkeypatch.setenv("TRUSTED_PROXY_HOPS", "0")                                  # no proxy: header ignored
+    assert ratelimit.client_ip(Req(f"1.2.3.4, {real}")) == "10.0.0.1"
+
+
+def test_spoofed_header_no_longer_bypasses_the_limit(monkeypatch):
+    _tight_limits(monkeypatch, TRUSTED_PROXY_HOPS="1")
+    body = R(1, "chairs", 5, 21, 23, "Lara")
+    real = "203.0.113.10"
+    codes = [client.post("/match", json=body, headers={"X-Forwarded-For": f"198.51.100.{i}, {real}"}).status_code
+             for i in range(5)]                    # a different forged first entry every time
+    assert codes[:3] == [200, 200, 200] and 429 in codes[3:]

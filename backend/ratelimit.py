@@ -68,8 +68,18 @@ class Limits:
 
 
 def client_ip(request):
-    # Behind Render's proxy the client is the first X-Forwarded-For entry.
+    """The client address used for per-IP limits.
+
+    X-Forwarded-For is a list that every proxy APPENDS to. Its first entries come from the client itself
+    and can be forged (found on the deployed API, 15 Nov: a fake first entry bypassed the per-IP limit).
+    Only the entries added by our own proxies can be trusted, i.e. the last TRUSTED_PROXY_HOPS of them;
+    the client address is the entry just before those, counted from the right.
+    TRUSTED_PROXY_HOPS = number of proxies in front of the app that append to the header (Render: 1).
+    """
+    hops = max(_int("TRUSTED_PROXY_HOPS", 1), 0)
     fwd = request.headers.get("x-forwarded-for")
-    if fwd:
-        return fwd.split(",")[0].strip()
+    if fwd and hops:
+        entries = [e.strip() for e in fwd.split(",") if e.strip()]
+        if len(entries) >= hops:
+            return entries[-hops]
     return request.client.host if request.client else "unknown"
