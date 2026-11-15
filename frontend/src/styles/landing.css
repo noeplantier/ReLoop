@@ -1,0 +1,219 @@
+/* Landing (wireframe: hero visual with the headline on it, light form card overlapping, value strip). */
+
+.landing {
+  display: grid;
+  gap: var(--s-6);
+  padding-bottom: var(--s-6);
+}
+
+.hero2 {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* Phone: the drawing is a band behind the headline only; the card sits below it, overlapping its foot. */
+.hero-art {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 460px;
+  z-index: -2;
+  display: block;
+}
+
+.hero2__shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 460px;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(11, 24, 40, 0.05) 0%, rgba(11, 24, 40, 0) 40%, rgba(11, 24, 40, 0.35) 80%, var(--bg) 100%),
+    linear-gradient(90deg, rgba(11, 24, 40, 0.6) 0%, rgba(11, 24, 40, 0) 70%);
+}
+
+.hero2__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--s-7) var(--s-4) 0;
+  display: grid;
+  gap: var(--s-6);
+}
+
+.hero2__text {
+  display: grid;
+  gap: var(--s-3);
+  min-height: 250px;
+  align-content: end;
+}
+
+.hero2__text .hero__title {
+  text-shadow: 0 2px 18px rgba(3, 9, 18, 0.55);
+}
+
+.hero2__text .hero__sub {
+  margin: 0;
+  color: #dbe6ee;
+  text-shadow: 0 1px 10px rgba(3, 9, 18, 0.6);
+}
+
+.hero2__text .hero__rule {
+  margin-top: var(--s-2);
+}
+
+.card-light--hero {
+  gap: var(--s-4);
+  padding-top: var(--s-4);
+  margin-top: 60px; /* leaves the chair rows of the drawing visible above the card */
+}
+
+@media (min-width: 900px) {
+  .card-light--hero {
+    margin-top: 0;
+  }
+}
+
+.card-form {
+  display: grid;
+  gap: var(--s-5);
+}
+
+/* Find / Offer: the two main actions */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: #e3e9ee;
+}
+
+.tab {
+  min-height: 46px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-2);
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.tab.is-on {
+  background: var(--ink);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(3, 9, 18, 0.25);
+}
+
+.offer-soon__text {
+  margin: 0;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.landing__more {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 var(--s-4);
+  display: grid;
+  gap: var(--s-5);
+}
+
+.values {
+  list-style: none;
+  margin: 0;
+  padding: var(--s-4) 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-3);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.values li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-2);
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.values svg {
+  color: var(--mint);
+}
+
+.mode--dark {
+  border-top: 0;
+  padding-top: 0;
+  justify-content: center;
+}
+
+.mode--dark .mode__label {
+  color: var(--text-3);
+}
+
+.mode--dark .mode__opt {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--text-2);
+}
+
+.mode--dark .mode__opt.is-on {
+  background: var(--surface-2);
+  border-color: var(--brand);
+  color: var(--text);
+}
+
+.landing .resume {
+  max-width: none;
+  margin-top: 0;
+}
+
+@media (min-width: 900px) {
+  .hero2 {
+    min-height: 620px;
+  }
+
+  .hero-art,
+  .hero2__shade {
+    height: 100%;
+  }
+
+  .hero2__shade {
+    background:
+      linear-gradient(90deg, rgba(11, 24, 40, 0.88) 0%, rgba(11, 24, 40, 0.45) 45%, rgba(11, 24, 40, 0.2) 100%),
+      linear-gradient(180deg, rgba(11, 24, 40, 0) 70%, var(--bg) 100%);
+  }
+
+  .hero2__inner {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: center;
+    padding: var(--s-7) var(--s-6);
+    min-height: 620px;
+  }
+
+  .hero2__text {
+    min-height: 0;
+    align-content: center;
+  }
+
+  .values li {
+    flex-direction: row;
+    justify-content: center;
+    text-align: left;
+    font-size: 1rem;
+  }
+}

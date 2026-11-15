@@ -1,7 +1,8 @@
 // Small inline icon set (stroke icons, 24px grid). Decorative unless a label is given.
 type Name =
   | "chair" | "calendar" | "pin" | "search" | "arrow" | "leaf" | "sparkle" | "chevron"
-  | "back" | "plus" | "minus" | "x" | "check" | "warn" | "info" | "light" | "table" | "stage" | "sign";
+  | "back" | "plus" | "minus" | "x" | "check" | "warn" | "info" | "light" | "table" | "stage" | "sign"
+  | "globe" | "loop";
 
 const paths: Record<Name, JSX.Element> = {
   chair: (
@@ -71,6 +72,19 @@ const paths: Record<Name, JSX.Element> = {
     <>
       <path d="M3 14h18v6H3z" />
       <path d="M6 14V6h12v8M3 6h18" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z" />
+    </>
+  ),
+  loop: (
+    <>
+      <path d="M19 12a7 7 0 0 1-12 4.9" />
+      <path d="M5 12a7 7 0 0 1 12-4.9" />
+      <path d="M17 3.5v3.6h-3.6M7 20.5v-3.6h3.6" />
     </>
   ),
   sign: (
