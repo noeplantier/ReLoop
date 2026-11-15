@@ -24,12 +24,13 @@ const PRIORITIES: { id: Priority; label: string }[] = [
 interface Props {
   parsed: ParseOut | null; // null = parsing failed, user fills everything in
   parseNote: string | null;
+  editing?: boolean; // editing a saved project's request (nothing was read from text)
   initial: ReviewedRequest;
   onBack: () => void;
   onConfirm: (r: ReviewedRequest) => void;
 }
 
-export function ReviewScreen({ parsed, parseNote, initial, onBack, onConfirm }: Props) {
+export function ReviewScreen({ parsed, parseNote, editing, initial, onBack, onConfirm }: Props) {
   const [r, setR] = useState<ReviewedRequest>(initial);
   const [tried, setTried] = useState(false);
   const set = <K extends keyof ReviewedRequest>(k: K, v: ReviewedRequest[K]) => setR((p) => ({ ...p, [k]: v }));
@@ -61,7 +62,11 @@ export function ReviewScreen({ parsed, parseNote, initial, onBack, onConfirm }: 
       <h1 className="page__title">Review your request</h1>
       <p className="page__sub">Check the details before we search. You can change anything.</p>
 
-      {parsed ? (
+      {editing ? (
+        <p className="source-note">
+          <Icon name="info" size={16} /> Editing your saved project. Your shortlist is kept and re-checked against the new request.
+        </p>
+      ) : parsed ? (
         <p className="source-note">
           <Icon name="sparkle" size={16} />
           {parsed.parser === "llm" ? "Read by AI from your text." : "Read from your text with standard rules (AI not used)."}{" "}

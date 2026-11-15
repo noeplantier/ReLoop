@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Steps } from "../components/Steps";
 import type { Category, Explanation, InventorySource, MatchOut, MatchResponse, Need } from "../lib/types";
@@ -23,7 +23,19 @@ interface Props {
   onRetry: () => void;
   onSwitchToDemo?: () => void;
   onShowMethod: () => void;
+  shortlistIds: Set<string>;
+  onToggleShortlist: (m: MatchOut, category: Category) => void;
+  onDetailsViewed: (itemId: string) => void;
+  shortlistCount: number;
+  saved: boolean;
+  onOpenShortlist: () => void;
 }
+
+const ShortlistCtx = createContext<{
+  ids: Set<string>;
+  toggle: (m: MatchOut, category: Category) => void;
+  viewed: (itemId: string) => void;
+}>({ ids: new Set(), toggle: () => undefined, viewed: () => undefined });
 
 const CAT_ICON: Record<Category, Parameters<typeof Icon>[0]["name"]> = {
   chairs: "chair", tables: "table", lighting: "light", staging: "stage", signage: "sign",
@@ -37,11 +49,15 @@ const SOURCE_TEXT: Record<InventorySource, string> = {
 
 const tl = (x: number) => `TRY ${Math.round(x).toLocaleString("en-US")}`;
 
-export function ResultsScreen({ results, source, placeLabel, dateLabel, onEdit, onRetry, onSwitchToDemo, onShowMethod }: Props) {
+export function ResultsScreen({
+  results, source, placeLabel, dateLabel, onEdit, onRetry, onSwitchToDemo, onShowMethod,
+  shortlistIds, onToggleShortlist, onDetailsViewed, shortlistCount, saved, onOpenShortlist,
+}: Props) {
   const anyError = results.some((r) => r.status === "error");
   const anyNotInDemo = results.some((r) => r.status === "not_in_demo");
   return (
-    <main className="page page--wide">
+    <ShortlistCtx.Provider value={{ ids: shortlistIds, toggle: onToggleShortlist, viewed: onDetailsViewed }}>
+    <main className="page page--wide page--with-bar">
       <div className="topbar">
         <button className="link-back" onClick={onEdit}>
           <Icon name="back" size={18} /> Edit request
@@ -89,7 +105,18 @@ export function ResultsScreen({ results, source, placeLabel, dateLabel, onEdit, 
       <button className="link-method" onClick={onShowMethod}>
         <Icon name="leaf" size={16} /> How we calculate the climate impact
       </button>
+
+      <div className="sl-bar" role="region" aria-label="Your shortlist">
+        <div className="sl-bar__text">
+          <b>Shortlist: {shortlistCount} item{shortlistCount === 1 ? "" : "s"}</b>
+          <span>{saved ? "Saved in this browser" : "Not saved: this browser blocks storage"}</span>
+        </div>
+        <button className="btn btn--small" onClick={onOpenShortlist}>
+          View shortlist <Icon name="arrow" size={16} />
+        </button>
+      </div>
     </main>
+    </ShortlistCtx.Provider>
   );
 }
 
@@ -161,6 +188,8 @@ function OptionCard({ m, need, rank, days, exp, explaining, explainNote, costNot
   costNote?: string; onShowMethod: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const sl = useContext(ShortlistCtx);
+  const inList = sl.ids.has(m.item_id);
   const missing = m.missing_quantity ?? need.quantity - m.quoted_quantity;
   const tag = !m.covers_quantity ? { t: "Partial match", c: "tag--warn" } : rank === 0 ? { t: "Best match", c: "tag--best" } : null;
 
@@ -213,9 +242,18 @@ function OptionCard({ m, need, rank, days, exp, explaining, explainNote, costNot
         )}
       </div>
 
-      <button className="btn btn--outline" aria-expanded={open} disabled={!exp} onClick={() => setOpen((o) => !o)}>
-        {open ? "Hide details" : "View details"} <Icon name={open ? "chevron" : "arrow"} size={18} />
-      </button>
+      <div className="opt__actions">
+        <button className={`btn ${inList ? "btn--outline is-in" : "btn--primary"}`} aria-pressed={inList}
+          onClick={() => sl.toggle(m, need.category)}>
+          <Icon name={inList ? "check" : "plus"} size={18} /> {inList ? "In shortlist" : "Add to shortlist"}
+        </button>
+        <button className="btn btn--outline" aria-expanded={open} disabled={!exp} onClick={() => {
+          if (!open) sl.viewed(m.item_id);
+          setOpen((o) => !o);
+        }}>
+          {open ? "Hide details" : "View details"} <Icon name={open ? "chevron" : "arrow"} size={18} />
+        </button>
+      </div>
 
       {open && exp && (
         <div className="opt__details">

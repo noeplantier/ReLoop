@@ -3,6 +3,7 @@
 import { API_URL } from "./config";
 import type { ExplainOut, InventorySource, MatchOut, MatchRequest, MatchResponse, Need, ParseOut } from "./types";
 import type { Methodology } from "../demo/demo";
+import type { ProjectBrief } from "./project";
 
 export class ApiError extends Error {
   constructor(message: string, readonly kind: "not_configured" | "network" | "timeout" | "http", readonly status?: number) {
@@ -44,7 +45,26 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export interface ShortlistCheckItem {
+  item_id: string;
+  need_category: string;
+  status: "available" | "partial" | "unavailable" | "unknown_item";
+  requested_quantity: number;
+  available_quantity: number | null;
+  missing_quantity: number | null;
+  note?: string;
+}
+
+export interface ShortlistCheckOut {
+  inventory_source: InventorySource;
+  note: string;
+  items: ShortlistCheckItem[];
+}
+
 export const api = {
+  /** Read-only re-check of a saved shortlist (POST /shortlist/check). Never reserves anything. */
+  shortlistCheck: (brief: ProjectBrief, shortlist: { need_category: string; item_id: string; quantity: number }[]) =>
+    call<ShortlistCheckOut>("/shortlist/check", { method: "POST", body: JSON.stringify({ brief, shortlist }) }),
   health: () => call<{ status: string; inventory_source: InventorySource }>("/health"),
   methodology: () => call<Methodology>("/impact/methodology"),
   parse: (text: string, today: string) =>
