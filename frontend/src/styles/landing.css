@@ -217,3 +217,21 @@
     font-size: 1rem;
   }
 }
+
+.offer-soon__badge {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: #fff4dc;
+  color: #7a4b00;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.btn--on-light {
+  color: var(--ink);
+  border-color: var(--ink);
+}

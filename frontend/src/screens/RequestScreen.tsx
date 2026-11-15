@@ -185,11 +185,13 @@ export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit
             ) : (
               <div className="card-form offer-soon">
                 <p className="field__label"><Icon name="chair" /> Have chairs, lights or a stage sitting idle?</p>
-                <p className="offer-soon__text">List them so nearby events can reuse them instead of buying new.</p>
-                <button type="button" className="btn btn--primary" disabled>
-                  <Icon name="plus" /> Offer equipment
+                <p className="offer-soon__text">Soon you’ll be able to list them here so nearby events can reuse them instead of buying new.</p>
+                <p className="offer-soon__badge">
+                  <Icon name="info" size={16} /> Not available in this prototype yet: nothing is published.
+                </p>
+                <button type="button" className="btn btn--outline btn--on-light" onClick={() => setTab("find")}>
+                  <Icon name="search" size={18} /> Find equipment instead
                 </button>
-                <p className="field__note">Being built today. Offers will be saved in this browser first, not visible to others yet.</p>
               </div>
             )}
           </div>
