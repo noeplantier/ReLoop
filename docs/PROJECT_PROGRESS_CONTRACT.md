@@ -1,7 +1,23 @@
-# Saved projects and progression: proposed contract (v1, PROPOSAL)
+# Saved projects and progression: contract (v1)
 
-Status: proposal for Noé's approval. Nothing below is implemented and no database change is made until it is
-approved. Owner: Atay (backend), consumed by Sueda (web app).
+Status: APPROVED by Noé (15 Nov). Backend implemented on branch `feat/progress` (`backend/progress.py`,
+`POST /shortlist/check`, `POST /progress/evaluate`, `backend/test_progress.py`); merged into `main` only after the
+deployed phone journey is stable. No database change, no write API. Owner: Atay (backend), consumed by Sueda.
+
+## UX wording (Noé, 15 Nov): use exactly these
+
+| Say | Never say |
+|---|---|
+| "Saved in this browser" | "saved to your account", "synced" |
+| "Shortlist" | "reserved", "booked", "secured" |
+| "Availability re-checked" (with the time) | "guaranteed", "confirmed" |
+| "Next steps" | "completed reuse", "exchange done" |
+| "Estimated opportunity: X–Y kg CO2e (illustrative)" | "CO2 saved", "impact achieved" |
+| "Concept — not redeemable" (rewards) | prizes, vouchers, "claim" |
+
+If browser data is gone (cleared, private window, other device): say so plainly, e.g. "No saved project found
+in this browser. Projects are saved only in the browser where you created them." and offer "Start a new
+project" (the review screen can be refilled quickly). Never imply cross-device or durable storage.
 
 Principles (from Noé, 15 Nov): a saved selection is a **shortlist, not a reservation**; inventory is never
 deducted and availability is never "secured"; the inventory reader stays **read-only**; no unauthenticated public
@@ -53,15 +69,20 @@ A shortlist is not a reservation: availability is re-checked when you reopen."
 ### A2. `POST /shortlist/check` (new, stateless, read-only) ~1 h incl. tests
 
 Request: `{ "brief": <brief>, "shortlist": [ { "need_category", "item_id", "quantity" } ] }` (max 20 items).
-Response, one entry per item, in order:
+Response, one entry per item, in order (implemented):
 
 ```json
-{ "inventory_source": "supabase", "checked_at": "2026-11-15T12:00:00Z",
-  "items": [ { "item_id": "b000...0001", "status": "available | partial | unavailable | unknown_item",
-               "available_quantity": 150, "missing_quantity": 0,
-               "current": { "name": "...", "distance_km": 0.0, "estimated_cost_try": 1800.0 },
-               "note": "Shortlist only, not reserved." } ] }
+{ "inventory_source": "supabase", "note": "Shortlist only, not reserved. Availability re-checked, not guaranteed.",
+  "items": [ { "item_id": "b000...0001", "need_category": "chairs",
+               "status": "available | partial | unavailable | unknown_item",
+               "requested_quantity": 50, "available_quantity": 150, "missing_quantity": 0,
+               "current": { "name": "...", "supplier": {"id": "...", "name": "..."}, "distance_km": 0.0,
+                           "condition": "excellent", "estimated_cost_try": 1800.0 },
+               "note": "Shortlist only, not reserved. Availability re-checked, not guaranteed." } ] }
 ```
+
+The app should store its own `checked_at` when it calls this (the server adds no clock, so results stay
+reproducible).
 
 Uses the same availability rules as `/match` (one window covering the whole date range). Never reserves.
 
@@ -91,10 +112,12 @@ the same project always gives the same result, and repeating the request can nev
   "points": { "earned": 30, "possible": 70, "note": "Product progress points. Not money, not exchangeable." },
   "next_step": { "id": "complete_shortlist", "text": "Choose an option for lighting (2 needed)." },
   "rewards": [ { "id": "relooper_badge", "title": "Relooper badge", "status": "concept",
-                 "note": "Concept only. No real reward, no redemption." } ],
+                 "note": "Concept — not redeemable. No real reward, prize or redemption exists in this prototype." } ],
   "estimated_opportunity": { "kgco2e_conservative": 95.6, "kgco2e_upper": 956.0, "status": "illustrative",
                              "counted_items": ["b000...0001"],
-                             "note": "Estimated opportunity of the current shortlist, each item counted once. Not saved, measured or verified carbon." }
+                             "note": "Estimated opportunity of the current shortlist, each item counted once. Not saved, measured, verified or achieved carbon." },
+  "shortlist": [ "same entries as POST /shortlist/check" ],
+  "inventory_source": "supabase"
 }
 ```
 
