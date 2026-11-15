@@ -1,4 +1,4 @@
-# Pitch numbers (generated 2026-11-14 by backend/tools/pitch_numbers.py)
+# Pitch numbers (generated 2026-11-15 by backend/tools/pitch_numbers.py)
 
 Do not edit by hand: rerun the tool. All inventory is fictional.
 
@@ -70,7 +70,7 @@ equal weights             : top-1 same as default in 21/30 requests, top-3 set i
 
 ## 5. Tests
 
-- Backend automated tests: 45
+- Backend automated tests: 68
 - Database checks (PGlite): 31 passed, 0 failed
 - AI layer tests: 26
 
