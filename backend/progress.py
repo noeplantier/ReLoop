@@ -12,7 +12,7 @@ Everything is DERIVED from the submitted project state plus the current (read-on
 import match
 import impact
 
-RULES_VERSION = "progress/v1"
+RULES_VERSION = "progress/v1.1"
 LOCAL_FIRST_KM = 15.0
 
 MILESTONES = [
@@ -30,12 +30,18 @@ MILESTONES = [
      f"The shortlist is not empty and every shortlisted supplier is within {LOCAL_FIRST_KM:g} km of the event."),
     ("returned_and_updated", "Came back and updated", 10,
      "The project was reopened and then changed (shortlist or request) after reopening."),
+    ("offer_saved", "Equipment offer saved", 10,
+     "At least one valid equipment offer is saved in this project (in this browser only, not published)."),
 ]
 
 REWARDS = [
     ("relooper_badge", "Relooper badge"),
     ("local_first_badge", "Local-first organiser badge"),
 ]
+PARTICIPATION_NOTE = ("Participation means you used the app. No exchange is tracked or verified in this "
+                      "prototype.")
+STARTER_NOTE = ("Digital participation badge with no monetary value. Not proof of reuse or verified impact; "
+                "no prize, voucher or redemption.")
 REWARD_NOTE = "Concept — not redeemable. No real reward, prize or redemption exists in this prototype."
 SHORTLIST_NOTE = "Shortlist only, not reserved. Availability re-checked, not guaranteed."
 OPPORTUNITY_NOTE = ("Estimated opportunity of the current shortlist, each item counted once. Not saved, "
@@ -145,7 +151,10 @@ def evaluate(project, inventory, suppliers, factors):
     updated = bool(reopened) and any(ev["type"] in ("shortlist_added", "shortlist_removed", "brief_changed")
                                      and ev["at"] > min(reopened) for ev in events)
     done = {"brief_reviewed": brief_ok, "options_compared": compared, "shortlist_started": bool(shortlist),
-            "shortlist_complete": complete, "local_first": local, "returned_and_updated": updated}
+            "shortlist_complete": complete, "local_first": local, "returned_and_updated": updated,
+            "offer_saved": bool(project.get("offers"))}
+    # participation: one valid confirmed request OR one saved offer, even with no matches
+    started = brief_ok or done["offer_saved"]
 
     milestones = [{"id": mid, "title": title, "status": "complete" if done[mid] else "incomplete",
                    "eligibility": rule, "evidence": evidence, "points": pts}
@@ -173,7 +182,11 @@ def evaluate(project, inventory, suppliers, factors):
         "points": {"earned": earned, "possible": sum(m[2] for m in MILESTONES),
                    "note": "Product progress points. Not money, not exchangeable, not redeemable."},
         "next_step": step,
-        "rewards": [{"id": rid, "title": t, "status": "concept", "note": REWARD_NOTE} for rid, t in REWARDS],
+        "participation": {"level": "started" if started else "none", "completed_exchanges": 0,
+                          "note": PARTICIPATION_NOTE},
+        "rewards": [{"id": "reuse_starter", "title": "Reuse Starter badge", "kind": "digital_badge",
+                     "status": "unlocked" if started else "locked", "note": STARTER_NOTE}]
+                   + [{"id": rid, "title": t, "status": "concept", "note": REWARD_NOTE} for rid, t in REWARDS],
         "estimated_opportunity": _opportunity(checked, brief, suppliers, factors),
         "shortlist": public_items(checked),
     }

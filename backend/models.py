@@ -243,6 +243,46 @@ class ProjectEvent(_Strict):
     item_id: Optional[str] = Field(default=None, max_length=64)
 
 
+class OfferLocation(_Strict):
+    preset_id: str = Field(min_length=1, max_length=32)
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+
+
+class Offer(_Strict):
+    """Equipment a user could lend. Saved in the browser only; see docs/OFFERS_REWARDS_CONTRACT.md."""
+    id: str = ShortId
+    category: Category
+    label: str = Field(min_length=1, max_length=80)
+    quantity: int = Field(gt=0, le=100000)
+    condition: Condition
+    available_from: date
+    available_to: date
+    location: OfferLocation
+    created_at: Optional[datetime] = None
+
+    @model_validator(mode="after")
+    def _check(self):
+        import offers
+        if self.available_to < self.available_from:
+            raise ValueError("available_to must be on or after available_from")
+        if (self.available_to - self.available_from).days > offers.MAX_SPAN_DAYS:
+            raise ValueError(f"availability longer than {offers.MAX_SPAN_DAYS} days")
+        problem = offers.label_problem(self.label)
+        if problem:
+            raise ValueError(problem)
+        p = offers.PRESETS.get(self.location.preset_id)
+        if p is None:
+            raise ValueError("location must be one of the demo location presets")
+        if abs(p["lat"] - self.location.lat) > 0.001 or abs(p["lon"] - self.location.lon) > 0.001:
+            raise ValueError("location coordinates do not match the preset")
+        return self
+
+
+class OfferValidateRequest(_Strict):
+    offer: Offer
+
+
 class Project(_Strict):
     schema_: Literal["reloop.project/v1"] = Field(alias="schema")
     id: str = ShortId
@@ -254,6 +294,7 @@ class Project(_Strict):
     brief_confirmed_at: Optional[datetime] = None
     shortlist: list[ShortlistEntry] = Field(default_factory=list, max_length=20)
     events: list[ProjectEvent] = Field(default_factory=list, max_length=200)
+    offers: list[Offer] = Field(default_factory=list, max_length=20)
 
 
 class ShortlistCheckRequest(_Strict):
