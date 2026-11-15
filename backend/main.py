@@ -15,10 +15,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import impact
 import match
 import inventory
+import progress
 import ratelimit
 from inventory import load_inventory
-from models import (BatchRequest, BatchResponse, MatchRequest, MatchResponse, SummaryRequest,
-                    SummaryResponse)
+from models import (BatchRequest, BatchResponse, MatchRequest, MatchResponse, ProgressRequest,
+                    ShortlistCheckRequest, SummaryRequest, SummaryResponse)
 
 log = logging.getLogger("reloop.api")
 
@@ -155,6 +156,27 @@ def impact_methodology():
     """How the carbon range is calculated, with every factor, source and assumption (for a
     "How we calculate" screen). Numbers come only from impact_factors.json."""
     return impact.methodology(FACTORS)
+
+
+@app.post("/shortlist/check")
+def shortlist_check(req: ShortlistCheckRequest):
+    """Re-check a saved shortlist against the current inventory (e.g. when a project is reopened).
+    Read-only and stateless: nothing is reserved, deducted or stored."""
+    inv = load_inventory()
+    d = req.model_dump(mode="json")
+    checked = progress.check_shortlist(d["brief"], d["shortlist"], inv["items"], inv["suppliers"], FACTORS)
+    return {"inventory_source": inv["source"], "note": progress.SHORTLIST_NOTE,
+            "items": progress.public_items(checked)}
+
+
+@app.post("/progress/evaluate")
+def progress_evaluate(req: ProgressRequest):
+    """Milestones, points, next step and reward concepts DERIVED from the submitted project state.
+    Deterministic, stateless, no database writes, no LLM. Clients cannot submit points or claims."""
+    inv = load_inventory()
+    project = req.model_dump(mode="json", by_alias=True)["project"]
+    return {"inventory_source": inv["source"],
+            **progress.evaluate(project, inv["items"], inv["suppliers"], FACTORS)}
 
 
 @app.post("/impact/summary", response_model=SummaryResponse)

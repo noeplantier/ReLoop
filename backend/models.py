@@ -166,3 +166,100 @@ class BatchResponse(BaseModel):
     allocations: list[BatchAllocation]
     comparison: BatchComparison
     note: Optional[str] = None
+
+
+# ---------- saved projects + progression (docs/PROJECT_PROGRESS_CONTRACT.md) ----------
+# extra="forbid" everywhere: a client cannot send points, balances, milestone states or rewards.
+from datetime import datetime  # noqa: E402
+
+from pydantic import ConfigDict  # noqa: E402
+
+Priority = Literal["balanced", "closest", "cheapest", "best_condition"]
+ShortId = Field(min_length=1, max_length=64)
+
+
+class _Strict(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class ProjectNeed(_Strict):
+    category: Category
+    quantity: int = Field(gt=0, le=100000)
+    label: Optional[str] = Field(default=None, max_length=80)
+
+
+class ProjectLocation(_Strict):
+    preset_id: Optional[str] = Field(default=None, max_length=32)
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+    label: Optional[str] = Field(default=None, max_length=120)
+
+
+class ProjectBrief(_Strict):
+    needs: list[ProjectNeed] = Field(min_length=1, max_length=5)
+    start_date: date
+    end_date: date
+    location: ProjectLocation
+    requirements: Optional[Requirements] = None
+    priority: Optional[Priority] = None
+
+    @model_validator(mode="after")
+    def _check(self):
+        if self.end_date < self.start_date:
+            raise ValueError("end_date must be on or after start_date")
+        if (self.end_date - self.start_date).days > 60:
+            raise ValueError("date range longer than 60 days")
+        cats = [n.category for n in self.needs]
+        if len(set(cats)) != len(cats):
+            raise ValueError("each equipment category may appear once in needs")
+        return self
+
+
+class ShortlistSnapshot(_Strict):
+    """Display-only copy kept by the app; the server never uses these numbers."""
+    name: Optional[str] = Field(default=None, max_length=120)
+    supplier_name: Optional[str] = Field(default=None, max_length=120)
+    distance_km: Optional[float] = None
+    estimated_cost_try: Optional[float] = None
+    inventory_source: Optional[str] = Field(default=None, max_length=32)
+    checked_at: Optional[datetime] = None
+
+
+class ShortlistEntry(_Strict):
+    need_category: Category
+    item_id: str = ShortId
+    quantity: int = Field(gt=0, le=100000)
+    added_at: Optional[datetime] = None
+    snapshot: Optional[ShortlistSnapshot] = None
+
+
+EventType = Literal["brief_confirmed", "details_viewed", "shortlist_added", "shortlist_removed",
+                    "project_reopened", "brief_changed"]
+
+
+class ProjectEvent(_Strict):
+    type: EventType
+    at: datetime
+    item_id: Optional[str] = Field(default=None, max_length=64)
+
+
+class Project(_Strict):
+    schema_: Literal["reloop.project/v1"] = Field(alias="schema")
+    id: str = ShortId
+    name: Optional[str] = Field(default=None, max_length=80)
+    mode: Literal["live", "demo"]
+    created_at: datetime
+    updated_at: datetime
+    brief: ProjectBrief
+    brief_confirmed_at: Optional[datetime] = None
+    shortlist: list[ShortlistEntry] = Field(default_factory=list, max_length=20)
+    events: list[ProjectEvent] = Field(default_factory=list, max_length=200)
+
+
+class ShortlistCheckRequest(_Strict):
+    brief: ProjectBrief
+    shortlist: list[ShortlistEntry] = Field(min_length=1, max_length=20)
+
+
+class ProgressRequest(_Strict):
+    project: Project
