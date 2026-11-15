@@ -382,3 +382,17 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Native dropdown lists: some mobile browsers ignore color-scheme for the option list,
+   which showed white text on white. Give every option explicit colours. */
+.need__cat option,
+.input--dark option,
+.panel select option {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.card-light select option {
+  background: var(--field);
+  color: var(--ink);
+}
