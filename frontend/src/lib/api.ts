@@ -3,6 +3,7 @@
 import { API_URL } from "./config";
 import type { ExplainOut, InventorySource, MatchOut, MatchRequest, MatchResponse, Need, ParseOut } from "./types";
 import type { Methodology } from "../demo/demo";
+import type { ProjectBrief, ReloopProject } from "./project";
 
 export class ApiError extends Error {
   constructor(message: string, readonly kind: "not_configured" | "network" | "timeout" | "http", readonly status?: number) {
@@ -44,7 +45,47 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export interface ShortlistCheckItem {
+  item_id: string;
+  need_category: string;
+  status: "available" | "partial" | "unavailable" | "unknown_item";
+  requested_quantity: number;
+  available_quantity: number | null;
+  missing_quantity: number | null;
+  note?: string;
+}
+
+export interface ShortlistCheckOut {
+  inventory_source: InventorySource;
+  note: string;
+  items: ShortlistCheckItem[];
+}
+
+/** POST /progress/evaluate: everything is derived on the server from the project (deterministic, no LLM). */
+export interface ProgressOut {
+  rules_version: string;
+  evidence: "demo" | "user_reported" | "verified";
+  milestones: {
+    id: string; title: string; status: "complete" | "incomplete"; eligibility: string;
+    evidence: "demo" | "user_reported" | "verified"; points: number;
+  }[];
+  points: { earned: number; possible: number; note: string };
+  next_step: { id: string; text: string };
+  rewards: { id: string; title: string; status: "concept" | "available" | "unavailable"; note: string }[];
+  estimated_opportunity: {
+    kgco2e_conservative: number | null; kgco2e_upper: number | null; status: string;
+    counted_items: string[]; note: string;
+  } | null;
+  shortlist: ShortlistCheckItem[];
+  inventory_source?: InventorySource;
+}
+
 export const api = {
+  progress: (project: ReloopProject) =>
+    call<ProgressOut>("/progress/evaluate", { method: "POST", body: JSON.stringify({ project }) }),
+  /** Read-only re-check of a saved shortlist (POST /shortlist/check). Never reserves anything. */
+  shortlistCheck: (brief: ProjectBrief, shortlist: { need_category: string; item_id: string; quantity: number }[]) =>
+    call<ShortlistCheckOut>("/shortlist/check", { method: "POST", body: JSON.stringify({ brief, shortlist }) }),
   health: () => call<{ status: string; inventory_source: InventorySource }>("/health"),
   methodology: () => call<Methodology>("/impact/methodology"),
   parse: (text: string, today: string) =>

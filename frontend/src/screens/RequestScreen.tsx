@@ -3,6 +3,7 @@ import { Icon } from "../components/Icon";
 import { MAX_TEXT_CHARS, type DataMode } from "../lib/config";
 import { DEMO_REQUEST, PRESETS } from "../lib/presets";
 import { DEMO_EXAMPLES } from "../demo/demo";
+import type { ReloopProject } from "../lib/project";
 
 export interface RequestDraft {
   text: string;
@@ -18,9 +19,15 @@ interface Props {
   error?: string | null;
   onModeChange: (m: DataMode) => void;
   onSubmit: (d: RequestDraft) => void;
+  projects: ReloopProject[];
+  canSave: boolean;
+  onReopen: (id: string) => void;
 }
 
-export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit }: Props) {
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit, projects, canSave, onReopen }: Props) {
   const [d, setD] = useState<RequestDraft>(draft);
   const [touched, setTouched] = useState(false);
 
@@ -49,6 +56,40 @@ export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit
           <Icon name="leaf" size={22} />
           <span />
         </div>
+
+        {projects.length > 0 && (
+          <div className="resume" aria-labelledby="resume-h">
+            <h2 id="resume-h" className="resume__h">Continue where you left off</h2>
+            <ul>
+              {projects.slice(0, 3).map((p) => (
+                <li key={p.id}>
+                  <button type="button" className="resume__item" onClick={() => onReopen(p.id)}>
+                    <span className="resume__name">{p.name}</span>
+                    <span className="resume__meta">
+                      {p.shortlist.length} in shortlist · updated {when(p.updated_at)}{p.mode === "demo" ? " · demo" : ""}
+                    </span>
+                    <Icon name="arrow" size={18} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="resume__note">Saved in this browser only.</p>
+          </div>
+        )}
+        {!canSave && (
+          <p className="resume__note">
+            This browser blocks saving (for example a private window), so projects can’t be kept after you close the page.
+          </p>
+        )}
+        {canSave && projects.length === 0 && (
+          <details className="resume__help">
+            <summary>Looking for a saved project?</summary>
+            <p>
+              No saved project found in this browser. Projects are saved only in the browser where you created them, and
+              clearing browser data deletes them. Start a new request below; the review screen lets you refill it quickly.
+            </p>
+          </details>
+        )}
       </section>
 
       <form className="card-light" onSubmit={submit} noValidate>

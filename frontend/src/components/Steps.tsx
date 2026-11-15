@@ -1,4 +1,4 @@
-const LABELS = ["Request", "Review", "Results", "Details"];
+const LABELS = ["Request", "Review", "Results", "Shortlist"];
 
 export function Steps({ current }: { current: number }) {
   return (
