@@ -16,8 +16,10 @@ and the mobile-first web app (Sueda); product scope, design direction, integrati
 **AI used in the product (runtime).** At submission, no live LLM is used: runtime AI budget is zero.
 Requests are parsed by a deterministic rule-based parser and explanations come from templates filled
 with the engine's numbers; the interface says so ("Read with standard rules", "Standard explanation").
-An optional LLM path exists in the code (`<Claude Haiku 5.5 via the Anthropic API / a Gemini free-tier
-model: final choice>`), switched off unless a key is configured on the server. If enabled, its output is
+An optional LLM path exists in the code (Claude Haiku 5.5 via the Anthropic API is the default model in
+`ai/llm.py`; no other provider is wired in), switched off unless both `LLM_PROVIDER=anthropic` and an API key are
+configured on the server. `<Noé: confirm it stays OFF at submission, or approve enabling it before 19:00>`
+Server limits cap any such use at 10 AI requests per minute per client and 300 per day overall. If enabled, its output is
 validated in code (quantities must appear in the user's text; every number in an explanation must exist in
 the engine data). Availability, ranking, prices and carbon figures are never produced by AI; the
 multi-event optimiser is mathematical optimisation (MILP), not AI.
@@ -25,8 +27,9 @@ multi-event optimiser is mathematical optimisation (MILP), not AI.
 **AI tools used during development.** Backend, database and documentation: Claude Code (Anthropic) was
 used to write, test and review code and documents under Atay's direction; all output was reviewed and
 tested by the team. `<Sueda: tools used>` `<Noé: tools used, e.g. for the mockup / slides>`
-AI-generated content in the submission: `<code and documentation partly AI-assisted as above; images or
-mockups made with AI, if any>`.
+AI-generated content in the submission: code and documentation are partly AI-assisted as above (reviewed and
+tested by the team). `<Noé/Sueda: images, mockups, slides, logo or video made with AI? If a demo video uses AI
+narration, music or generated visuals, list the tool and say which parts here; music licences may need credit.>`
 
 **Data sources.** All inventory, suppliers and prices are fictional, created for this prototype; no real
 company or personal data. Emission factors: UK Government GHG Conversion Factors for Company Reporting
@@ -39,8 +42,10 @@ materials are estimates, so every figure is labelled illustrative. Method and fa
 /impact/methodology` and `docs/PITCH_NUMBERS.md`.
 
 **Open-source components.** FastAPI, Pydantic, Uvicorn, SciPy/HiGHS, NumPy, psycopg, supabase-py,
-python-dotenv, PGlite (tests), React, Vite, TypeScript `<complete from frontend/package.json>`. Used under
-their respective open-source licences. Repository licence: `<none declared / choose one>`.
+python-dotenv, Anthropic SDK (only used if the LLM is enabled), PGlite (database tests), pytest, httpx, React 18,
+Vite 6, TypeScript 5 (from `backend/requirements.txt`, `ai/requirements.txt`, `frontend/package.json`,
+`supabase/tests/package.json`). Used under their respective open-source licences.
+Repository licence: `<Noé: none declared yet, choose one>`.
 
 **Evaluation status.** On 20 held-out English test requests (written after the parser was tuned and not
 used for tuning) the rule-based parser read 14/20 fully correctly; when unsure it left the field for the user
