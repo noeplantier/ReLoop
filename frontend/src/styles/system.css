@@ -321,6 +321,7 @@ input[type="date"] { color-scheme: dark; }
   position: sticky; bottom: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 10px 12px; margin: 0 -4px; border-radius: var(--r-lg); background: rgba(13, 29, 47, 0.92); border: 1px solid var(--brand-a35); box-shadow: var(--glow); backdrop-filter: blur(10px);
 }
+.actionbar--review { margin-top: 16px; }
 .actionbar__text { display: grid; font-size: var(--fs-sm); }
 .actionbar__text span { font-size: var(--fs-xs); color: var(--text-3); }
 .view--results .view__body { align-content: start; }

@@ -211,15 +211,21 @@ export function ReviewScreen({ parsed, parseNote, editing, initial, onBack, onCo
           Please complete the highlighted sections.
         </p>
       )}
-      <button
-        className="btn btn--primary"
-        onClick={() => {
-          setTried(true);
-          if (ok) onConfirm(r);
-        }}
-      >
-        <Icon name="search" /> Confirm and search <Icon name="arrow" />
-      </button>
+      <div className="actionbar actionbar--review">
+        <div className="actionbar__text">
+          <b>{r.needs.length} item{r.needs.length === 1 ? "" : "s"}</b>
+          <span>{ok ? "Ready to search" : "Some details are missing"}</span>
+        </div>
+        <button
+          className="btn btn--primary"
+          onClick={() => {
+            setTried(true);
+            if (ok) onConfirm(r);
+          }}
+        >
+          Confirm and search <Icon name="arrow" />
+        </button>
+      </div>
       <p className="foot foot--tag">
         <Icon name="leaf" size={18} /> Reuse. Reduce. ReLoop.
       </p>
