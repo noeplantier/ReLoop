@@ -36,7 +36,7 @@ Pitch deck: created in Claude Slides. All figures were taken from Atay’s engin
 
 Noé used Perplexity for research, product-direction drafting and team communication. It was not used to generate the application code, logo, demo video, slides or product artwork.
 
-The hero illustration is an SVG drawn in code, not an AI-generated image or photo. The colour palette was sampled from the existing ReLoop logo; the logo mark was cropped from that asset, not generated.
+The landing page shows the existing ReLoop logo inside animated rings drawn in code (SVG/CSS); no AI-generated image or photo is used. The colour palette was sampled from the existing ReLoop logo; the logo mark was cropped from that asset, not generated.
 
 No AI-generated images, mockups, logo assets or video narration/music were used. The demo video was not produced by Sueda.
 
