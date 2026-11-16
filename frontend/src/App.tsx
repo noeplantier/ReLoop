@@ -106,6 +106,16 @@ export default function App() {
   const starter = achievements.reuse_starter;
   const [congrats, setCongrats] = useState(() => !!loadAchievements().reuse_starter && !loadAchievements().reuse_starter!.seen);
   const mainRef = useRef<HTMLDivElement>(null);
+  const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine !== false);
+  useEffect(() => {
+    const up = () => setOnline(true), down = () => setOnline(false);
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    return () => {
+      window.removeEventListener("online", up);
+      window.removeEventListener("offline", down);
+    };
+  }, []);
 
   const go = (v: View) => {
     setView(v);
@@ -357,6 +367,11 @@ export default function App() {
       <a className="skip" href="#main">Skip to content</a>
       <Header mode={mode} area={AREA_OF[view]} onNavigate={navigate} initials={initials(profile.name)} rewardDot={!!starter && !starter.seen} />
       <div className="shell__main" id="main" ref={mainRef}>
+        {!online && (
+          <p className="offline" role="status">
+            You’re offline. Saved projects, offers and your badge are still here; searches and checks will work again when you reconnect.
+          </p>
+        )}
         {view === "home" && (
           <RequestScreen draft={draft} onDraftChange={setDraft} mode={mode} busy={busy} onModeChange={setMode} onSubmit={submitRequest}
             projects={projects.map((s) => s.project)} canSave={canSave} onReopen={reopen}
