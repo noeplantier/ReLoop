@@ -98,7 +98,16 @@ export function ResultsScreen(props: Props) {
               const c = coverage(r);
               return (
                 <button key={r.need.category} type="button" role="tab" aria-selected={r.need.category === cat}
-                  className={`cat-tab ${r.need.category === cat ? "is-on" : ""}`} onClick={() => setCat(r.need.category)}>
+                  className={`cat-tab ${r.need.category === cat ? "is-on" : ""}`} onClick={() => setCat(r.need.category)}
+                  id={`cat-${r.need.category}`} tabIndex={r.need.category === cat ? 0 : -1}
+                  onKeyDown={(e) => {
+                    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+                    e.preventDefault();
+                    const i = results.findIndex((x) => x.need.category === cat);
+                    const n = results[(i + (e.key === "ArrowRight" ? 1 : results.length - 1)) % results.length].need.category;
+                    setCat(n);
+                    document.getElementById(`cat-${n}`)?.focus();
+                  }}>
                   <span className="cat-tab__name">{r.need.quantity} {r.need.label}</span>
                   {c && <span className={`cat-tab__sub ${c.ok ? "" : "is-warn"}`}>{c.text}</span>}
                 </button>
