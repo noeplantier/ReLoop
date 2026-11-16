@@ -26,7 +26,11 @@ multi-event optimiser is mathematical optimisation (MILP), not AI.
 
 **AI tools used during development.** Backend, database and documentation: Claude Code (Anthropic) was
 used to write, test and review code and documents under Atay's direction; all output was reviewed and
-tested by the team. `<Sueda: tools used>` `<Noé: tools used, e.g. for the mockup / slides>`
+tested by the team. Web app redesign (16 Nov, PRs #6–#12: visual system, results carousel, offer flow,
+My ReLoop hub, badges and celebrations, profile on this device): Claude Code (Anthropic) wrote and
+browser-tested the code under Noé's direction; the team reviewed and merged it. The equipment pictures and
+reward concept art are SVG illustrations drawn in code, not AI-generated images or photos.
+`<Sueda: tools used>` `<Noé: other tools used, e.g. for the mockup / slides>`
 AI-generated content in the submission: code and documentation are partly AI-assisted as above (reviewed and
 tested by the team). `<Noé/Sueda: images, mockups, slides, logo or video made with AI? If a demo video uses AI
 narration, music or generated visuals, list the tool and say which parts here; music licences may need credit.>`
