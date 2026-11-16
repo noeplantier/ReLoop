@@ -6,7 +6,8 @@ import { BadgeArt } from "../components/RewardArt";
 import { presetById } from "../lib/presets";
 import { initials, type Achievement, type Profile } from "../lib/local";
 
-export function ProfileScreen({ profile, onSave, projectCount, offerCount, achievement, onOpenHub, onReset, canSave }: {
+export function ProfileScreen({ profile, onSave, projectCount, offerCount, achievement, badgeCount = 0, onOpenHub, onReset, canSave }: {
+  badgeCount?: number;
   profile: Profile;
   onSave: (p: Profile) => void;
   projectCount: number;
@@ -65,7 +66,7 @@ export function ProfileScreen({ profile, onSave, projectCount, offerCount, achie
             <ul className="stats">
               <li><b>{projectCount}</b><span>saved project{projectCount === 1 ? "" : "s"}</span></li>
               <li><b>{offerCount}</b><span>offer{offerCount === 1 ? "" : "s"} (not public)</span></li>
-              <li><b>{achievement ? 1 : 0}</b><span>digital badge</span></li>
+              <li><b>{(achievement ? 1 : 0) + badgeCount}</b><span>digital badges</span></li>
             </ul>
             {profile.area && <p className="fine">Preferred area: {presetById(profile.area)?.name}</p>}
             <button className="btn btn--ghost btn--block" onClick={onOpenHub}>Open My ReLoop <Icon name="arrow" size={18} /></button>
@@ -92,7 +93,7 @@ export function ProfileScreen({ profile, onSave, projectCount, offerCount, achie
               setArea("");
             }}>Reset</button>
           </>}>
-          <p>This deletes your profile, offers and digital badge from this browser. It can’t be undone.</p>
+          <p>This deletes your profile, offers and digital badges from this browser. It can’t be undone.</p>
           <label className="check">
             <input type="checkbox" checked={alsoProjects} onChange={(e) => setAlsoProjects(e.target.checked)} />
             Also delete saved projects ({projectCount})

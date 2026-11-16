@@ -4,6 +4,8 @@ import { MethodologySheet } from "./components/MethodologySheet";
 import { Dialog } from "./components/Dialog";
 import { OfferFlow } from "./components/OfferFlow";
 import { BadgeArt } from "./components/RewardArt";
+import { Confetti } from "./components/Confetti";
+import { BADGES, badgesFromMilestones, badgesFromOffers, loadBadges, recordBadges, resetBadges } from "./lib/badges";
 import { Icon } from "./components/Icon";
 import { RequestScreen, type RequestDraft } from "./screens/RequestScreen";
 import { ReviewScreen, type ReviewedRequest } from "./screens/ReviewScreen";
@@ -106,6 +108,8 @@ export default function App() {
   const starter = achievements.reuse_starter;
   const [congrats, setCongrats] = useState(() => !!loadAchievements().reuse_starter && !loadAchievements().reuse_starter!.seen);
   const mainRef = useRef<HTMLDivElement>(null);
+  const [badges, setBadges] = useState(loadBadges);
+  const [celebrate, setCelebrate] = useState<{ kind: "find" | "offer"; fresh: string[] } | null>(null);
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine !== false);
   useEffect(() => {
     const up = () => setOnline(true), down = () => setOnline(false);
@@ -153,6 +157,11 @@ export default function App() {
   };
   const onProgress = (out: ProgressOut) => {
     if (out.rewards.some((r) => r.id === "reuse_starter" && r.status === "unlocked")) unlocked("request", out.rules_version);
+    const fresh = recordBadges(badgesFromMilestones(out.milestones.filter((m) => m.status === "complete").map((m) => m.id)));
+    if (fresh.length) {
+      setBadges(loadBadges());
+      if (fresh.includes("full_cover")) setCelebrate({ kind: "find", fresh });
+    }
   };
 
   async function submitRequest(d: RequestDraft) {
@@ -295,7 +304,7 @@ export default function App() {
 
   /* ---------- offers ---------- */
 
-  async function saveOffer(o: Offer): Promise<{ error: string | null; checked: boolean }> {
+  async function saveOffer(o: Offer, isEdit = false): Promise<{ error: string | null; checked: boolean }> {
     let check: StoredOffer["check"] = "unchecked";
     let final = o;
     let area: string | undefined;
@@ -317,7 +326,12 @@ export default function App() {
       return { error: "This browser blocks saving, so the offer couldn’t be kept.", checked: false };
     }
     setOffers(listOffers());
-    if (check === "valid") unlocked("offer", rules);
+    if (check === "valid") {
+      unlocked("offer", rules);
+      const fresh = recordBadges(badgesFromOffers(listOffers().filter((x) => x.check === "valid").length));
+      setBadges(loadBadges());
+      if (!isEdit) setCelebrate({ kind: "offer", fresh });
+    }
     return { error: null, checked: check === "valid" };
   }
 
@@ -351,7 +365,7 @@ export default function App() {
   const currentForHub = project ?? projects[0] ?? null;
 
   const offerPanel = (
-    <OfferFlow defaultArea={profile.area} onSave={(o) => saveOffer(o)} rewardUnlocked={!!starter}
+    <OfferFlow defaultArea={profile.area} onSave={(o, e) => saveOffer(o, e)} rewardUnlocked={!!starter}
       onViewReward={() => {
         setHubArea("rewards");
         go("hub");
@@ -453,6 +467,7 @@ export default function App() {
             projects={projects}
             offers={offers}
             achievement={starter}
+            badges={badges}
             profileName={profile.name}
             initialArea={hubArea}
             onOpenProject={reopen}
@@ -479,7 +494,7 @@ export default function App() {
               setProfile(p);
               setDraft((d) => (d.location ? d : { ...d, location: p.area }));
             }}
-            projectCount={projects.length} offerCount={offers.length} achievement={starter}
+            projectCount={projects.length} offerCount={offers.length} achievement={starter} badgeCount={Object.keys(badges).length}
             onOpenHub={() => go("hub")}
             onReset={(alsoProjects) => {
               resetLocal();
@@ -492,13 +507,15 @@ export default function App() {
               setProfile(loadProfile());
               setOffers([]);
               setAchievements({});
+              resetBadges();
+              setBadges({});
             }} />
         )}
       </div>
 
       {editOffer && (
         <Dialog title="Edit offer" onClose={() => setEditOffer(null)} eyebrow="Saved in this browser — not visible to others yet">
-          <OfferFlow editing={editOffer} defaultArea={profile.area} onSave={(o) => saveOffer(o)} rewardUnlocked={false}
+          <OfferFlow editing={editOffer} defaultArea={profile.area} onSave={(o, e) => saveOffer(o, e)} rewardUnlocked={false}
             onViewReward={() => undefined} onManage={() => setEditOffer(null)} onDone={() => setEditOffer(null)}
             offerCount={offers.length} max={MAX_OFFERS} />
         </Dialog>
@@ -513,10 +530,37 @@ export default function App() {
             go("hub");
           }}><Icon name="gift" size={18} /> View my reward</button>
         </>}>
+          <Confetti />
           <div className="reveal">
             <BadgeArt unlocked size={132} />
             <p>{starter.via === "offer" ? "Thanks for sharing what you have." : "Thanks for looking for an alternative to buying new."} Your digital badge and a downloadable card are in My ReLoop.</p>
             <p className="fine">A participation badge: no monetary value, and not proof of an exchange or of carbon saved.</p>
+          </div>
+        </Dialog>
+      )}
+
+      {celebrate && !congrats && (
+        <Dialog eyebrow="Congratulations" title={celebrate.kind === "find" ? "Your shortlist covers everything" : "Thanks for sharing"}
+          onClose={() => setCelebrate(null)} footer={<>
+            <button className="btn btn--ghost" onClick={() => setCelebrate(null)}>Keep going</button>
+            <button className="btn btn--primary" data-autofocus onClick={() => {
+              setCelebrate(null);
+              setHubArea("rewards");
+              go("hub");
+            }}><Icon name="gift" size={18} /> See my badges</button>
+          </>}>
+          <Confetti />
+          <div className="reveal">
+            <div className="celebrate-icon"><Icon name={celebrate.kind === "find" ? "check" : "loop"} size={34} /></div>
+            <p>{celebrate.kind === "find"
+              ? "Every item is covered by reuse options — an alternative to buying new. Nothing is reserved yet: contacting suppliers is the next step."
+              : "Your offer is saved in this browser — not visible to others yet. Keeping equipment in circulation starts with offers like yours."}</p>
+            {celebrate.fresh.length > 0 && (
+              <ul className="badge-chips" aria-label="New badges">
+                {celebrate.fresh.map((id) => <li key={id}><Icon name="sparkle" size={14} /> {BADGES.find((b) => b.id === id)?.title}</li>)}
+              </ul>
+            )}
+            <p className="fine">Digital badges only: no monetary value, not proof of an exchange or of carbon saved.</p>
           </div>
         </Dialog>
       )}

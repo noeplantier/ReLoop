@@ -9,12 +9,14 @@ import { presetById } from "../lib/presets";
 import { offerSummary, type Achievement, type StoredOffer } from "../lib/local";
 import { downloadCard } from "../lib/card";
 import { progressData, useProgress } from "../lib/useProgress";
+import { BADGES } from "../lib/badges";
 
 interface Props {
   current: StoredProject | null;
   projects: StoredProject[];
   offers: StoredOffer[];
   achievement: Achievement | undefined;
+  badges: Record<string, string>;
   profileName: string;
   initialArea: "project" | "rewards";
   onOpenProject: (id: string) => void;
@@ -160,6 +162,25 @@ export function MyReloopScreen(p: Props) {
             </div>
           </div>
           <p className="fine">Participation badge: no monetary value, not proof of an exchange or of carbon saved.</p>
+
+          <div className="card">
+            <div className="card__row">
+              <h3 className="h3">Badges</h3>
+              <span className="count">{Object.keys(p.badges).length + (unlocked ? 1 : 0)}/{BADGES.length + 1}</span>
+            </div>
+            <ul className="badge-grid">
+              {BADGES.map((b) => {
+                const on = !!p.badges[b.id];
+                return (
+                  <li key={b.id} className={on ? "is-on" : ""} title={b.rule}>
+                    <span className="badge-grid__icon"><Icon name={on ? "check" : "sparkle"} size={16} /></span>
+                    <span className="badge-grid__title">{b.title}</span>
+                    <span className="badge-grid__rule">{on ? "Unlocked" : b.rule}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
           <div className="card">
             <div className="card__row">
