@@ -85,7 +85,7 @@ ranking robustness) and `docs/AI_EVAL_RULES.md` (parser accuracy, grounding). Ca
   Government Licence v3.0. Used as a proxy for Türkiye.
 - Open-source libraries: FastAPI, Pydantic, Uvicorn, NumPy, SciPy (HiGHS), psycopg, supabase-py, python-dotenv,
   Anthropic SDK (only used if the LLM is enabled), React, Vite, TypeScript, PGlite (database tests).
-- Repository licence: TODO(Noé): choose one (none declared yet).
+- Repository licence: MIT License (see [`LICENSE`](LICENSE)).
 
 ## Limitations (stated openly)
 

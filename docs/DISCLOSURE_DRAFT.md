@@ -49,7 +49,7 @@ materials are estimates, so every figure is labelled illustrative. Method and fa
 python-dotenv, Anthropic SDK (only used if the LLM is enabled), PGlite (database tests), pytest, httpx, React 18,
 Vite 6, TypeScript 5 (from `backend/requirements.txt`, `ai/requirements.txt`, `frontend/package.json`,
 `supabase/tests/package.json`). Used under their respective open-source licences.
-Repository licence: `<Noé: none declared yet, choose one>`.
+Repository licence: MIT License (`LICENSE` at the repository root).
 
 **Evaluation status.** On 20 held-out English test requests (written after the parser was tuned and not
 used for tuning) the rule-based parser read 14/20 fully correctly; when unsure it left the field for the user
