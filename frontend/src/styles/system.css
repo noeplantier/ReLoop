@@ -457,8 +457,30 @@ input[type="date"] { color-scheme: dark; }
   .actionbar { padding: 8px 10px; }
 }
 
+/* ---------- celebration ---------- */
+.confetti { position: absolute; inset: 0 0 auto 0; height: 100%; pointer-events: none; overflow: hidden; z-index: 0; }
+.confetti span { position: absolute; top: -12px; opacity: 0; animation: confetti-fall 2.4s cubic-bezier(0.25, 0.6, 0.4, 1) forwards; }
+@keyframes confetti-fall {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--drift), 420px) rotate(var(--rot)); }
+}
+.dlg { position: relative; }
+.dlg .reveal { position: relative; z-index: 1; }
+.celebrate-icon { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(circle at 30% 25%, var(--mint), var(--brand)); color: var(--on-brand); box-shadow: var(--glow-strong); animation: pop 0.6s var(--ease); }
+.badge-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.badge-chips li { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--brand-a20); border: 1px solid var(--brand-a35); color: var(--mint); font-size: var(--fs-xs); font-weight: 700; }
+.badge-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.badge-grid li { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; padding: 8px 10px; border-radius: var(--r-md); border: 1px dashed var(--line-strong); color: var(--text-3); transition: border-color 0.3s, background-color 0.3s; }
+.badge-grid li.is-on { border-style: solid; border-color: var(--brand-a35); background: var(--brand-a10); color: var(--text); }
+.badge-grid__icon { grid-row: 1 / 3; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(251, 253, 252, 0.05); }
+.badge-grid li.is-on .badge-grid__icon { background: var(--brand); color: var(--on-brand); }
+.badge-grid__title { font-size: var(--fs-xs); font-weight: 700; }
+.badge-grid__rule { font-size: 0.68rem; line-height: 1.3; }
+
 /* ---------- motion preferences ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
   .orbit__spin, .badge-art__ring, .aura--strong { animation: none !important; }
+  .confetti { display: none; }
 }
