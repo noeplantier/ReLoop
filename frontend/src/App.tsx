@@ -335,6 +335,11 @@ export default function App() {
     return { error: null, checked: check === "valid" };
   }
 
+  // Offer badges follow offers the server already accepted (also covers offers saved before badges existed).
+  useEffect(() => {
+    if (recordBadges(badgesFromOffers(offers.filter((o) => o.check === "valid").length)).length) setBadges(loadBadges());
+  }, [offers]);
+
   // Offers saved while the server was unreachable are checked again when My ReLoop opens.
   useEffect(() => {
     if (view !== "hub" || !API_URL) return;
@@ -494,7 +499,8 @@ export default function App() {
               setProfile(p);
               setDraft((d) => (d.location ? d : { ...d, location: p.area }));
             }}
-            projectCount={projects.length} offerCount={offers.length} achievement={starter} badgeCount={Object.keys(badges).length}
+            projectCount={projects.length} offerCount={offers.length} achievement={starter} badgeCount={Object.keys(badges).length} badges={badges}
+            shortlisted={projects.reduce((n, x) => n + x.project.shortlist.length, 0)}
             onOpenHub={() => go("hub")}
             onReset={(alsoProjects) => {
               resetLocal();
