@@ -1,62 +1,68 @@
 import { useEffect, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Steps } from "../components/Steps";
+import { EquipmentArt } from "../components/EquipmentArt";
 import { api, ApiError, type ProgressOut, type ShortlistCheckItem } from "../lib/api";
-import { ProgressPanel } from "../components/ProgressPanel";
 import { CATEGORIES } from "../lib/types";
 import { presetById } from "../lib/presets";
 import { estimatedOpportunity, type StoredProject } from "../lib/project";
+import { progressData, useProgress } from "../lib/useProgress";
 import { fmt } from "../demo/demo";
+import type { Offer } from "../lib/local";
 
 interface Props {
   stored: StoredProject;
   saved: boolean; // false when the browser refused to store it
   autoCheck: boolean; // run the availability re-check on open (reopened project)
   onBack: () => void;
+  onFindMore: () => void;
   onEditRequest: () => void;
   onRemove: (itemId: string) => void;
   onRename: (name: string) => void;
   onDelete: () => void;
   onShowMethod: () => void;
+  onProgress: (out: ProgressOut) => void;
+  onOpenHub: () => void;
+  offers: Offer[]; // server-checked offers, sent with the project for progress
 }
 
 type Check =
   | { state: "idle" }
-  | { state: "checking" }
-  | { state: "done"; at: string; items: Record<string, ShortlistCheckItem>; source: string }
-  | { state: "unavailable"; reason: string };
+  | { state: "checking"; prev: Check | null }
+  | { state: "done"; at: string; items: Record<string, ShortlistCheckItem> }
+  | { state: "unavailable"; reason: string; prev: Check | null };
 
 const STATUS_TEXT: Record<ShortlistCheckItem["status"], string> = {
   available: "Still available for your dates",
   partial: "Only partly available now",
   unavailable: "No longer available for your dates",
-  unknown_item: "This item is no longer listed",
+  unknown_item: "No longer listed",
 };
 
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
-export function ShortlistScreen({ stored, saved, autoCheck, onBack, onEditRequest, onRemove, onRename, onDelete, onShowMethod }: Props) {
+export function ShortlistScreen({ stored, saved, autoCheck, onBack, onFindMore, onEditRequest, onRemove, onRename, onDelete, onShowMethod, onProgress, onOpenHub, offers }: Props) {
   const p = stored.project;
   const [check, setCheck] = useState<Check>({ state: "idle" });
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function recheck() {
     if (p.mode === "demo") {
-      setCheck({ state: "unavailable", reason: "Not re-checked: demo mode replays recorded results." });
+      setCheck({ state: "unavailable", prev: null, reason: "Not re-checked: demo mode replays recorded results." });
       return;
     }
     if (!p.shortlist.length) return;
-    setCheck({ state: "checking" });
+    // A failed re-check keeps the previous result and never touches the saved shortlist.
+    setCheck((c) => ({ state: "checking", prev: c }));
     try {
       const out = await api.shortlistCheck(p.brief, p.shortlist.map(({ need_category, item_id, quantity }) => ({ need_category, item_id, quantity })));
-      setCheck({ state: "done", at: new Date().toISOString(), source: out.inventory_source,
-                 items: Object.fromEntries(out.items.map((i) => [i.item_id, i])) });
+      setCheck({ state: "done", at: new Date().toISOString(), items: Object.fromEntries(out.items.map((i) => [i.item_id, i])) });
     } catch (e) {
-      const notThere = e instanceof ApiError && e.status === 404;
-      setCheck({ state: "unavailable", reason: notThere
-        ? "Availability re-check is not available on this server yet."
-        : `Could not re-check availability: ${e instanceof ApiError ? e.message : "unexpected error"}` });
+      const reason = e instanceof ApiError && e.status === 404
+        ? "Availability re-check isn’t available on this server yet."
+        : `Couldn’t re-check availability: ${e instanceof ApiError ? e.message : "unexpected error"} Your shortlist is unchanged.`;
+      setCheck((c) => ({ state: "unavailable", reason, prev: c.state === "checking" ? c.prev : c }));
     }
   }
 
@@ -65,196 +71,145 @@ export function ShortlistScreen({ stored, saved, autoCheck, onBack, onEditReques
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.id]);
 
-  // Progress: evaluated by the server from the project (deterministic). Re-run when the substance changes
-  // (not on every rename keystroke), debounced.
-  const [progress, setProgress] = useState<ProgressOut | null>(null);
-  const [progLoading, setProgLoading] = useState(false);
-  const [progUnavailable, setProgUnavailable] = useState<string | null>(null);
-  const progKey = JSON.stringify([p.brief, p.shortlist.map((e) => [e.item_id, e.quantity]), p.events.length, p.mode]);
-  useEffect(() => {
-    if (p.mode === "demo") {
-      setProgress(null);
-      setProgUnavailable("Progress is evaluated by the live server, so it is not shown in demo mode.");
-      return;
+  const prog = useProgress(p, (out) => {
+    onProgress(out);
+    // The evaluation includes a fresh availability re-check of the shortlist (live projects only).
+    if (p.mode === "live" && out.shortlist?.length) {
+      setCheck({ state: "done", at: new Date().toISOString(), items: Object.fromEntries(out.shortlist.map((i) => [i.item_id, i])) });
     }
-    let cancelled = false;
-    setProgLoading(true);
-    const t = setTimeout(async () => {
-      try {
-        const out = await api.progress(p);
-        if (cancelled) return;
-        setProgress(out);
-        setProgUnavailable(null);
-        // The evaluation includes a fresh availability re-check of the shortlist.
-        if (out.shortlist?.length) {
-          setCheck({ state: "done", at: new Date().toISOString(), source: out.inventory_source ?? "",
-                     items: Object.fromEntries(out.shortlist.map((i) => [i.item_id, i])) });
-        }
-      } catch (e) {
-        if (cancelled) return;
-        setProgress(null);
-        setProgUnavailable(e instanceof ApiError && e.status === 404
-          ? "Progress is not available on this server yet."
-          : `Could not load progress: ${e instanceof ApiError ? e.message : "unexpected error"}`);
-      } finally {
-        if (!cancelled) setProgLoading(false);
-      }
-    }, 600);
-    return () => {
-      cancelled = true;
-      clearTimeout(t);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progKey]);
+  }, offers);
+  const progress = progressData(prog);
 
+  const lastDone = check.state === "done" ? check
+    : (check.state === "checking" || check.state === "unavailable") && check.prev?.state === "done" ? check.prev : null;
   const local = estimatedOpportunity(stored);
   const srv = progress?.estimated_opportunity;
-  // Prefer the server's figure (recomputed from current inventory); fall back to the engine numbers we kept.
   const opp = srv && srv.kgco2e_upper != null
     ? { lo: srv.kgco2e_conservative ?? srv.kgco2e_upper, hi: srv.kgco2e_upper, illustrative: srv.status !== "sourced" }
     : local;
   const loc = presetById(p.brief.location.preset_id);
-  const coverage = p.brief.needs.map((n) => {
-    const got = p.shortlist.filter((e) => e.need_category === n.category).reduce((a, e) => a + e.quantity, 0);
-    return { ...n, got };
-  });
+  const coverage = p.brief.needs.map((n) => ({
+    ...n, got: p.shortlist.filter((e) => e.need_category === n.category).reduce((a, e) => a + e.quantity, 0),
+  }));
+  const gaps = coverage.filter((c) => c.got < c.quantity);
+  const problems = lastDone ? p.shortlist.filter((e) => lastDone.items[e.item_id] && lastDone.items[e.item_id].status !== "available") : [];
 
-  // Next steps: same order of rules as the backend contract (B3), computed from what is on screen.
-  const next: string[] = [];
-  if (check.state === "done") {
-    for (const e of p.shortlist) {
-      const c = check.items[e.item_id];
-      if (c && c.status !== "available") next.push(`Replace ${e.snapshot.name}: availability changed.`);
-    }
-  }
-  for (const c of coverage) {
-    if (c.got < c.quantity) next.push(`Choose an option for ${c.label} (${c.quantity - c.got} still needed).`);
-  }
-  if (!next.length) next.push("Your shortlist is ready. Contacting suppliers is not part of this prototype.");
-  // When the server evaluated the project, its next step is the authoritative first item.
-  if (progress?.next_step && !next.includes(progress.next_step.text)) next.splice(0, next.length, progress.next_step.text);
+  const nextText = progress?.next_step.text
+    ?? (problems.length ? `Replace ${problems[0].snapshot.name}: availability changed.`
+      : gaps.length ? `Choose an option for ${gaps[0].label} (${gaps[0].quantity - gaps[0].got} more needed).`
+        : "Your shortlist is ready. Contacting suppliers isn’t part of this prototype; nothing is reserved.");
+  const needsMore = !p.shortlist.length || gaps.length > 0 || problems.length > 0;
+  const starter = progress?.rewards.find((r) => r.id === "reuse_starter");
 
   return (
-    <main className="page page--wide">
-      <div className="topbar">
-        <button className="link-back" onClick={onBack}>
-          <Icon name="back" size={18} /> Back
-        </button>
-        <span className={`src ${saved ? "" : "src--warn"}`}>{saved ? "Saved in this browser" : "Not saved: storage blocked"}</span>
-      </div>
-      <Steps current={3} />
-
-      <label className="name-field">
-        <span className="date__cap">Project name</span>
-        <input className="input input--dark name-input" maxLength={80} value={p.name}
-          onChange={(e) => onRename(e.target.value)} aria-label="Project name" />
-      </label>
-      <p className="page__meta">
-        <Icon name="pin" size={16} /> {loc?.name ?? "Location"} · {day(p.brief.start_date + "T12:00:00")}–{day(p.brief.end_date + "T12:00:00")}
-        {p.mode === "demo" && <span className="src src--browser_demo">Demo</span>}
-      </p>
-
-      <p className="notice notice--info">
-        <Icon name="info" size={16} />
-        <span>
-          A shortlist is not a reservation: nothing is booked and stock is not held for you.{" "}
-          {saved
-            ? "Saved on this device and browser only; clearing browser data deletes it."
-            : "This browser does not allow saving, so the project will be lost when you close the page."}
-        </span>
-      </p>
-
-      <section className="panel" aria-labelledby="cov-h">
-        <h2 id="cov-h" className="panel__h"><Icon name="chair" /> Your needs</h2>
-        <ul className="plain">
-          {coverage.map((c) => (
-            <li key={c.category}>
-              {c.quantity} {c.label}:{" "}
-              <b className={c.got >= c.quantity ? "ok" : "warn"}>
-                {c.got >= c.quantity ? "covered in your shortlist" : c.got ? `${c.got} of ${c.quantity} shortlisted` : "nothing shortlisted yet"}
-              </b>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="panel" aria-labelledby="sl-h">
-        <div className="panel__row">
-          <h2 id="sl-h" className="panel__h"><Icon name="check" /> Shortlist ({p.shortlist.length})</h2>
-          {p.shortlist.length > 0 && p.mode === "live" && (
-            <button className="btn btn--small btn--ghost" onClick={recheck} disabled={check.state === "checking"}>
-              {check.state === "checking" ? "Re-checking…" : "Re-check availability"}
-            </button>
-          )}
+    <main className="view view--project">
+      <div className="view__head">
+        <div className="topbar">
+          <button className="link-back" onClick={onBack}><Icon name="back" size={18} /> Back</button>
+          <span className={`src ${saved ? "" : "src--warn"}`}>{saved ? "Saved in this browser" : "Not saved: storage blocked"}</span>
         </div>
-        {check.state === "done" && (
-          <p className="small-note">Availability re-checked at {time(check.at)} (not guaranteed).</p>
-        )}
-        {check.state === "unavailable" && <p className="small-note">{check.reason}</p>}
-        {p.shortlist.length === 0 && (
-          <p className="panel__empty">Nothing shortlisted yet. Add options from the results with “Add to shortlist”.</p>
-        )}
-        <ul className="sl">
-          {p.shortlist.map((e) => {
-            const c = check.state === "done" ? check.items[e.item_id] : undefined;
-            const cat = CATEGORIES.find((x) => x.slug === e.need_category)?.name ?? e.need_category;
-            return (
-              <li key={e.item_id} className="sl__item">
-                <div className="sl__main">
-                  <p className="sl__cat">{cat} · {e.quantity} units</p>
-                  <p className="sl__name">{e.snapshot.name}</p>
-                  <p className="sl__sup">{e.snapshot.supplier_name} · ~{e.snapshot.distance_km} km
-                    {e.snapshot.estimated_cost_try != null && <> · est. TRY {Math.round(e.snapshot.estimated_cost_try).toLocaleString("en-US")}</>}
-                  </p>
-                  {c && (
-                    <p className={`sl__status ${c.status === "available" ? "ok" : "warn"}`}>
-                      <Icon name={c.status === "available" ? "check" : "warn"} size={16} /> {STATUS_TEXT[c.status]}
-                      {c.status === "partial" && c.missing_quantity ? ` (${c.missing_quantity} missing)` : ""}
-                    </p>
-                  )}
-                  <p className="sl__seen">Added {day(e.added_at)}, {time(e.added_at)}</p>
-                </div>
-                <button className="need__rm" aria-label={`Remove ${e.snapshot.name} from shortlist`} onClick={() => onRemove(e.item_id)}>
-                  <Icon name="x" size={18} />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+        <Steps current={3} />
+        <input className="title-input" maxLength={80} value={p.name} onChange={(e) => onRename(e.target.value)} aria-label="Project name" />
+        <p className="meta"><Icon name="pin" size={16} /> {loc?.name ?? "Area"} · {day(p.brief.start_date + "T12:00:00")}–{day(p.brief.end_date + "T12:00:00")}
+          {p.mode === "demo" && <span className="src src--browser_demo">Demo</span>}</p>
+      </div>
 
-      {opp && (
-        <section className="panel" aria-labelledby="opp-h">
-          <h2 id="opp-h" className="panel__h"><Icon name="leaf" /> Estimated opportunity</h2>
-          <p>
-            {fmt(opp.lo)}–{fmt(opp.hi)} kg CO2e{opp.illustrative ? " (illustrative)" : ""} if these items are reused instead of
-            bought new, each item counted once.
-          </p>
-          <p className="small-note">An estimate for this shortlist, not saved, measured or verified carbon.</p>
-          <button className="link-inline" onClick={onShowMethod}>How we calculate →</button>
-        </section>
-      )}
-
-      <section className="panel" aria-labelledby="next-h">
-        <h2 id="next-h" className="panel__h"><Icon name="arrow" /> Next steps</h2>
-        <ul className="plain">
-          {next.map((x) => <li key={x}>{x}</li>)}
-        </ul>
-      </section>
-
-      <ProgressPanel progress={progress} loading={progLoading} unavailable={progUnavailable} />
-
-      <div className="actions">
-        <button className="btn btn--outline" onClick={onEditRequest}>Edit request</button>
-        {!confirmDelete ? (
-          <button className="link-inline danger" onClick={() => setConfirmDelete(true)}>Delete this project</button>
-        ) : (
-          <div className="confirm">
-            <span>Delete “{p.name}” from this browser? This cannot be undone.</span>
-            <button className="btn btn--small" onClick={onDelete}>Delete</button>
-            <button className="btn btn--small btn--ghost" onClick={() => setConfirmDelete(false)}>Cancel</button>
+      <div className="view__body project-grid">
+        <section className="card" aria-labelledby="sl-h">
+          <div className="card__row">
+            <h2 id="sl-h" className="h2">Shortlist <span className="count">{p.shortlist.length}</span></h2>
+            {p.shortlist.length > 0 && p.mode === "live" && (
+              <button className="btn btn--small btn--ghost" onClick={recheck} disabled={check.state === "checking"}>
+                {check.state === "checking" ? "Re-checking…" : "Re-check availability"}
+              </button>
+            )}
           </div>
-        )}
+          {lastDone && <p className="fine">Re-checked at {time(lastDone.at)} · not a reservation, not guaranteed.</p>}
+          {check.state === "unavailable" && <p className="field__note field__note--warn" role="status">{check.reason}</p>}
+          {p.shortlist.length === 0 && <p className="empty2">Nothing shortlisted yet. Partial matches count — add what helps.</p>}
+          <ul className="sl2">
+            {p.shortlist.map((e) => {
+              const c = lastDone?.items[e.item_id];
+              const cat = CATEGORIES.find((x) => x.slug === e.need_category)?.name ?? e.need_category;
+              return (
+                <li key={e.item_id} className="sl2__item">
+                  <div className="sl2__art"><EquipmentArt category={e.need_category} label={false} /></div>
+                  <div className="sl2__main">
+                    <p className="sl2__name">{e.snapshot.name}</p>
+                    <p className="fine">{cat} · {e.quantity} units · {e.snapshot.supplier_name} (fictional) · ~{e.snapshot.distance_km} km
+                      {e.snapshot.estimated_cost_try != null && <> · est. TRY {Math.round(e.snapshot.estimated_cost_try).toLocaleString("en-US")}</>}</p>
+                    {c && (
+                      <p className={`status ${c.status === "available" ? "is-ok" : "is-warn"}`}>
+                        <Icon name={c.status === "available" ? "check" : "warn"} size={14} /> {STATUS_TEXT[c.status]}
+                        {c.status === "partial" && c.missing_quantity ? ` (${c.missing_quantity} missing)` : ""}
+                      </p>
+                    )}
+                  </div>
+                  <button className="icon-btn" aria-label={`Remove ${e.snapshot.name} from shortlist`} onClick={() => onRemove(e.item_id)}>
+                    <Icon name="x" size={18} />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <div className="stack">
+          <section className="card card--next" aria-labelledby="next-h">
+            <h2 id="next-h" className="h3">Next useful step</h2>
+            <p>{nextText}</p>
+            <ul className="cov">
+              {coverage.map((c) => (
+                <li key={c.category} className={c.got >= c.quantity ? "is-ok" : "is-warn"}>
+                  <span>{c.quantity} {c.label}</span>
+                  <b>{c.got >= c.quantity ? "Covered" : `${c.got}/${c.quantity}`}</b>
+                </li>
+              ))}
+            </ul>
+            <button className={`btn btn--block ${needsMore ? "btn--primary" : "btn--ghost"}`} onClick={onFindMore}>
+              <Icon name="search" size={18} /> {needsMore ? "Find more options" : "Browse options again"}
+            </button>
+          </section>
+
+          <section className="card" aria-labelledby="pr-h">
+            <div className="card__row">
+              <h2 id="pr-h" className="h3">Progress</h2>
+              {progress && <span className="count">{progress.points.earned}/{progress.points.possible} pts</span>}
+            </div>
+            {prog.state === "loading" && !progress && <p className="fine">Checking your progress…</p>}
+            {prog.state === "unavailable" && <p className="fine">{prog.reason}</p>}
+            {progress && (
+              <>
+                <div className="meter" aria-hidden="true"><span style={{ width: `${Math.round((100 * progress.points.earned) / Math.max(progress.points.possible, 1))}%` }} /></div>
+                <p className="fine">{progress.milestones.filter((m) => m.status === "complete").length} of {progress.milestones.length} reuse steps · evaluated by the server</p>
+              </>
+            )}
+            <button className={`btn btn--block ${!needsMore && starter?.status === "unlocked" ? "btn--primary" : "btn--ghost"}`} onClick={onOpenHub}>
+              <Icon name="gift" size={18} /> {starter?.status === "unlocked" ? "View my reward" : "Progress & rewards"}
+            </button>
+          </section>
+
+          {opp && (
+            <section className="card" aria-labelledby="opp-h">
+              <h2 id="opp-h" className="h3"><Icon name="leaf" size={18} /> Estimated opportunity</h2>
+              <p><b>{fmt(opp.lo)}–{fmt(opp.hi)} kg CO2e</b>{opp.illustrative ? " (illustrative)" : ""} if these items are reused instead of bought new, each counted once.</p>
+              <p className="fine">An estimate for this shortlist — not saved, measured or verified carbon. <button className="link-btn" onClick={onShowMethod}>Method</button></p>
+            </section>
+          )}
+
+          <div className="row-actions">
+            <button className="btn btn--small btn--ghost" onClick={onEditRequest}><Icon name="edit" size={16} /> Edit request</button>
+            {!confirmDelete ? (
+              <button className="btn btn--small btn--ghost danger" onClick={() => setConfirmDelete(true)}><Icon name="trash" size={16} /> Delete project</button>
+            ) : (
+              <div className="confirm" role="alert">
+                <span>Delete “{p.name}” from this browser? This can’t be undone.</span>
+                <button className="btn btn--small btn--danger" onClick={onDelete}>Delete</button>
+                <button className="btn btn--small btn--ghost" onClick={() => setConfirmDelete(false)}>Cancel</button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );

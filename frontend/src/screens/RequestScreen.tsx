@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Icon } from "../components/Icon";
-import { HeroArt } from "../components/HeroArt";
+import { LoopOrbit } from "../components/Brand";
+import { AreaPicker } from "../components/AreaPicker";
 import { MAX_TEXT_CHARS, type DataMode } from "../lib/config";
-import { DEMO_REQUEST, PRESETS } from "../lib/presets";
+import { DEMO_REQUEST } from "../lib/presets";
 import { DEMO_EXAMPLES } from "../demo/demo";
 import type { ReloopProject } from "../lib/project";
 
@@ -15,25 +16,24 @@ export interface RequestDraft {
 
 interface Props {
   draft: RequestDraft;
+  onDraftChange: (d: RequestDraft) => void;
   mode: DataMode;
   busy?: boolean;
-  error?: string | null;
   onModeChange: (m: DataMode) => void;
   onSubmit: (d: RequestDraft) => void;
   projects: ReloopProject[];
   canSave: boolean;
   onReopen: (id: string) => void;
+  tab: "find" | "offer";
+  onTab: (t: "find" | "offer") => void;
+  offerPanel: ReactNode;
 }
 
-const when = (iso: string) =>
-  new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const when = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
-export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit, projects, canSave, onReopen }: Props) {
-  const [d, setD] = useState<RequestDraft>(draft);
+export function RequestScreen({ draft: d, onDraftChange, mode, busy, onModeChange, onSubmit, projects, canSave, onReopen, tab, onTab, offerPanel }: Props) {
   const [touched, setTouched] = useState(false);
-  const [tab, setTab] = useState<"find" | "offer">("find");
-
-  const set = <K extends keyof RequestDraft>(k: K, v: RequestDraft[K]) => setD((p) => ({ ...p, [k]: v }));
+  const set = <K extends keyof RequestDraft>(k: K, v: RequestDraft[K]) => onDraftChange({ ...d, [k]: v });
   const datesInvalid = !!(d.startDate && d.endDate && d.endDate < d.startDate);
   const empty = d.text.trim().length === 0;
 
@@ -45,221 +45,118 @@ export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit
   };
 
   return (
-    <main className="landing">
-      <section className="hero2" aria-labelledby="hero-title">
-        <HeroArt />
-        <div className="hero2__shade" aria-hidden="true" />
-        <div className="hero2__inner">
-          <div className="hero2__text">
-            <h1 id="hero-title" className="hero__title">
-              Find equipment.
-              <br />
-              <span className="hero__accent">Reuse locally.</span>
-            </h1>
-            <p className="hero__sub">Give events a lighter footprint together.</p>
-            <div className="hero__rule" aria-hidden="true">
-              <Icon name="leaf" size={22} />
-              <span />
-            </div>
-          </div>
-
-          <div className="card-light card-light--hero">
-            <div className="tabs" role="tablist" aria-label="What do you want to do?">
-              <button type="button" role="tab" aria-selected={tab === "find"} className={`tab ${tab === "find" ? "is-on" : ""}`}
-                onClick={() => setTab("find")}>
-                <Icon name="search" size={18} /> Find equipment
-              </button>
-              <button type="button" role="tab" aria-selected={tab === "offer"} className={`tab ${tab === "offer" ? "is-on" : ""}`}
-                onClick={() => setTab("offer")}>
-                <Icon name="plus" size={18} /> Offer equipment
-              </button>
-            </div>
-
-            {tab === "find" ? (
-              <form className="card-form" onSubmit={submit} noValidate>
-          <div className="field">
-            <label className="field__label" htmlFor="need">
-              <Icon name="chair" /> What do you need?
-            </label>
-            <textarea
-              id="need"
-              className="input input--area"
-              rows={3}
-              maxLength={MAX_TEXT_CHARS}
-              placeholder="e.g. 50 chairs and 2 stage lights near Lara, Antalya"
-              value={d.text}
-              onChange={(e) => set("text", e.target.value)}
-              aria-invalid={touched && empty}
-              aria-describedby="need-hint"
-            />
-            <div id="need-hint" className="field__hint">
-              {touched && empty && <span className="field__error">Describe what you need, in your own words.</span>}
-              <div className="examples">
-                <button type="button" className="chip" onClick={() => setD({ ...DEMO_REQUEST })}>
-                  <Icon name="sparkle" size={16} /> Try the Antalya demo request
-                </button>
-                <details className="examples__more">
-                  <summary>More examples</summary>
-                  <ul>
-                    {DEMO_EXAMPLES.filter((x) => x.id !== "main").map((x) => (
-                      <li key={x.id}>
-                        <button type="button" className="example" onClick={(e) => {
-                          setD({ text: x.text, startDate: x.startDate, endDate: x.endDate, location: x.location });
-                          (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-                        }}>
-                          {x.title}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              </div>
-            </div>
-          </div>
-
-          <fieldset className="field">
-            <legend className="field__label">
-              <Icon name="calendar" /> Event dates
-            </legend>
-            <div className="dates">
-              <label className="date">
-                <span className="date__cap">From</span>
-                <input
-                  type="date"
-                  className="input"
-                  value={d.startDate}
-                  onChange={(e) => set("startDate", e.target.value)}
-                />
-              </label>
-              <label className="date">
-                <span className="date__cap">To</span>
-                <input
-                  type="date"
-                  className="input"
-                  value={d.endDate}
-                  min={d.startDate || undefined}
-                  onChange={(e) => set("endDate", e.target.value)}
-                  aria-invalid={datesInvalid}
-                />
-              </label>
-            </div>
-            {datesInvalid && <p className="field__error">The end date is before the start date.</p>}
-          </fieldset>
-
-          <div className="field">
-            <label className="field__label" htmlFor="loc">
-              <Icon name="pin" /> Location
-            </label>
-            <div className="select">
-              <select id="loc" className="input" value={d.location} onChange={(e) => set("location", e.target.value)}>
-                <option value="">Choose a demo location…</option>
-                {PRESETS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <Icon name="chevron" size={18} />
-            </div>
-            <p className="field__note">Demo locations only. Distances are approximate.</p>
-          </div>
-
-          <button className="btn btn--primary" type="submit" disabled={busy} aria-busy={busy}>
-            {busy ? (
-              <>
-                <span className="spinner" aria-hidden="true" /> Reading your request…
-              </>
-            ) : (
-              <>
-                <Icon name="search" /> Find reuse options <Icon name="arrow" />
-              </>
-            )}
-          </button>
-
-                {error && (
-                  <p className="alert" role="alert">
-                    {error}
-                  </p>
-                )}
-              </form>
-            ) : (
-              <div className="card-form offer-soon">
-                <p className="field__label"><Icon name="chair" /> Have chairs, lights or a stage sitting idle?</p>
-                <p className="offer-soon__text">Soon you’ll be able to list them here so nearby events can reuse them instead of buying new.</p>
-                <p className="offer-soon__badge">
-                  <Icon name="info" size={16} /> Not available in this prototype yet: nothing is published.
-                </p>
-                <button type="button" className="btn btn--outline btn--on-light" onClick={() => setTab("find")}>
-                  <Icon name="search" size={18} /> Find equipment instead
-                </button>
-              </div>
-            )}
-          </div>
+    <main className="view home">
+      <section className="home__intro" aria-labelledby="hero-title">
+        <LoopOrbit />
+        <div>
+          <h1 id="hero-title" className="display">Event equipment,<br /><span className="accent">kept in the loop.</span></h1>
+          <p className="lede">Find an alternative to buying new — or share what you already have.</p>
         </div>
+
       </section>
 
-      <div className="landing__more">
-        {projects.length > 0 && (
-          <div className="resume" aria-labelledby="resume-h">
-            <h2 id="resume-h" className="resume__h">Continue where you left off</h2>
-            <ul>
-              {projects.slice(0, 3).map((p) => (
-                <li key={p.id}>
-                  <button type="button" className="resume__item" onClick={() => onReopen(p.id)}>
-                    <span className="resume__name">{p.name}</span>
-                    <span className="resume__meta">
-                      {p.shortlist.length} in shortlist · updated {when(p.updated_at)}{p.mode === "demo" ? " · demo" : ""}
-                    </span>
-                    <Icon name="arrow" size={18} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <p className="resume__note">Saved in this browser only.</p>
-          </div>
-        )}
-        {!canSave && (
-          <p className="resume__note">
-            This browser blocks saving (for example a private window), so projects can’t be kept after you close the page.
-          </p>
-        )}
-        {canSave && projects.length === 0 && (
-          <details className="resume__help">
-            <summary>Looking for a saved project?</summary>
-            <p>
-              No saved project found in this browser. Projects are saved only in the browser where you created them, and
-              clearing browser data deletes them. Start a new request below; the review screen lets you refill it quickly.
-            </p>
-          </details>
-        )}
-
-        <ul className="values" aria-label="Why reuse">
-          <li><Icon name="leaf" size={30} /><span>Reduce<br />waste</span></li>
-          <li><Icon name="globe" size={30} /><span>Lower carbon<br />footprint</span></li>
-          <li><Icon name="loop" size={30} /><span>Give equipment<br />a second life</span></li>
-        </ul>
-
-        <div className="mode mode--dark" role="radiogroup" aria-label="Data source">
-          <span className="mode__label">Data</span>
-          {(["live", "demo"] as DataMode[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="radio"
-              aria-checked={mode === m}
-              className={`mode__opt ${mode === m ? "is-on" : ""}`}
-              onClick={() => onModeChange(m)}
-            >
-              {m === "live" ? "Live" : "Demo (recorded examples)"}
+      <section className="panel-main aura aura--strong" aria-label="Find or offer equipment">
+        <div className="tabs2" role="tablist" aria-label="What do you want to do?">
+          {(["find", "offer"] as const).map((t) => (
+            <button key={t} id={`tab-${t}`} type="button" role="tab" aria-selected={tab === t} aria-controls={`pane-${t}`}
+              tabIndex={tab === t ? 0 : -1} className={`tabs2__tab ${tab === t ? "is-on" : ""}`} onClick={() => onTab(t)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                  const n = t === "find" ? "offer" : "find";
+                  onTab(n);
+                  document.getElementById(`tab-${n}`)?.focus();
+                }
+              }}>
+              <Icon name={t === "find" ? "search" : "plus"} size={18} /> {t === "find" ? "Find equipment" : "Offer equipment"}
             </button>
           ))}
         </div>
 
-        <footer className="foot">
-          <Icon name="leaf" size={18} />
-          A more circular event economy
-        </footer>
-      </div>
+        {tab === "find" ? (
+          <form id="pane-find" role="tabpanel" aria-labelledby="tab-find" className="pane" onSubmit={submit} noValidate>
+            <div className="field">
+              <div className="field__row">
+                <label className="field__label" htmlFor="need">What do you need?</label>
+                <details className="examples2">
+                  <summary>Examples</summary>
+                  <ul>
+                    <li><button type="button" onClick={(e) => {
+                      onDraftChange({ ...DEMO_REQUEST });
+                      e.currentTarget.closest("details")?.removeAttribute("open");
+                    }}>Antalya demo request</button></li>
+                    {DEMO_EXAMPLES.filter((x) => x.id !== "main").map((x) => (
+                      <li key={x.id}><button type="button" onClick={(e) => {
+                        onDraftChange({ text: x.text, startDate: x.startDate, endDate: x.endDate, location: x.location });
+                        e.currentTarget.closest("details")?.removeAttribute("open");
+                      }}>{x.title}</button></li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+              <textarea id="need" className="input input--area" rows={3} maxLength={MAX_TEXT_CHARS}
+                placeholder="e.g. 50 chairs and 2 stage lights near Lara, Antalya"
+                value={d.text} onChange={(e) => set("text", e.target.value)}
+                aria-invalid={(touched && empty) || undefined} aria-describedby="need-hint" />
+              <p id="need-hint" className={`field__note ${touched && empty ? "field__note--err" : ""}`}>
+                {touched && empty ? "Describe what you need, in your own words." : "Plain words are fine — you’ll review everything next."}
+              </p>
+            </div>
+
+            <fieldset className="field">
+              <legend className="field__label"><Icon name="calendar" size={18} /> Event dates</legend>
+              <div className="dates">
+                <label className="date"><span className="date__cap">From</span>
+                  <input type="date" className="input" value={d.startDate} onChange={(e) => set("startDate", e.target.value)} />
+                </label>
+                <label className="date"><span className="date__cap">To</span>
+                  <input type="date" className="input" value={d.endDate} min={d.startDate || undefined}
+                    onChange={(e) => set("endDate", e.target.value)} aria-invalid={datesInvalid || undefined} />
+                </label>
+              </div>
+              {datesInvalid && <p className="field__note field__note--err">The end date is before the start date.</p>}
+            </fieldset>
+
+            <AreaPicker value={d.location} onChange={(v) => set("location", v)} label="Event area" idHint="loc" />
+
+            <button className="btn btn--primary btn--block" type="submit" disabled={busy} aria-busy={busy}>
+              {busy ? <><span className="spinner" aria-hidden="true" /> Reading your request…</> : <>Find reuse options <Icon name="arrow" /></>}
+            </button>
+          </form>
+        ) : (
+          <div id="pane-offer" role="tabpanel" aria-labelledby="tab-offer" className="pane">
+            {offerPanel}
+          </div>
+        )}
+      </section>
+
+      <section className="home__aside" aria-label="Your saved work and data source">
+        {projects.length > 0 && (
+          <div className="resume2">
+            <p className="eyebrow">Continue where you left off</p>
+            <ul>
+              {projects.slice(0, 2).map((p) => (
+                <li key={p.id}>
+                  <button type="button" className="resume2__item" onClick={() => onReopen(p.id)}>
+                    <span className="resume2__name">{p.name}</span>
+                    <span className="resume2__meta">{p.shortlist.length} shortlisted · {when(p.updated_at)}{p.mode === "demo" ? " · demo" : ""}</span>
+                    <Icon name="next" size={18} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {!canSave && <p className="field__note field__note--warn">This browser blocks saving (e.g. a private window): projects and offers will be lost when you close the page.</p>}
+
+        <div className="mode" role="radiogroup" aria-label="Inventory">
+          {(["live", "demo"] as DataMode[]).map((m) => (
+            <button key={m} type="button" role="radio" aria-checked={mode === m} className={`mode__opt ${mode === m ? "is-on" : ""}`}
+              onClick={() => onModeChange(m)}>
+              {m === "live" ? "Live inventory" : "Demo (recorded)"}
+            </button>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }

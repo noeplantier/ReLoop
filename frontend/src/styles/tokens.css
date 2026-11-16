@@ -52,5 +52,30 @@
   --shadow-card: 0 18px 40px rgba(3, 9, 18, 0.45);
   --focus: 0 0 0 3px rgba(94, 240, 178, 0.55);
 
+  /* lines, glow and aura: all derived from the single brand green */
+  --line-strong: rgba(251, 253, 252, 0.16);
+  --brand-a10: rgba(10, 181, 103, 0.10);
+  --brand-a20: rgba(10, 181, 103, 0.20);
+  --brand-a35: rgba(10, 181, 103, 0.35);
+  --glow: 0 0 0 1px rgba(10, 181, 103, 0.10), 0 0 28px -8px rgba(10, 181, 103, 0.45);
+  --glow-strong: 0 0 0 1px rgba(10, 181, 103, 0.16), 0 0 48px -10px rgba(10, 181, 103, 0.6), 0 24px 60px -20px rgba(3, 9, 18, 0.8);
+  --surface-glass: rgba(17, 36, 58, 0.72);
+
+  /* illustration strokes */
+  --art-line: #8fe9c2;
+  --art-fill: rgba(94, 240, 178, 0.08);
+  --art-beam: rgba(94, 240, 178, 0.14);
+
+  /* type scale (rem, follows browser text size) */
+  --fs-xs: 0.78rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.15rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: clamp(1.9rem, 1.2rem + 2.6vw, 3.1rem);
+
+  --nav-h: 64px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
   --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }

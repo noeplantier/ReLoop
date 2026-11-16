@@ -2,7 +2,8 @@
 type Name =
   | "chair" | "calendar" | "pin" | "search" | "arrow" | "leaf" | "sparkle" | "chevron"
   | "back" | "plus" | "minus" | "x" | "check" | "warn" | "info" | "light" | "table" | "stage" | "sign"
-  | "globe" | "loop";
+  | "globe" | "loop" | "user" | "gift" | "download" | "copy" | "edit" | "trash" | "home" | "locate" | "box"
+  | "prev" | "next";
 
 const paths: Record<Name, JSX.Element> = {
   chair: (
@@ -93,6 +94,62 @@ const paths: Record<Name, JSX.Element> = {
       <path d="M12 14v7M9 21h6" />
     </>
   ),
+  user: (
+    <>
+      <circle cx="12" cy="8.5" r="3.8" />
+      <path d="M4.5 20.5c1.2-3.8 4.2-5.6 7.5-5.6s6.3 1.8 7.5 5.6" />
+    </>
+  ),
+  gift: (
+    <>
+      <rect x="3.5" y="9" width="17" height="11.5" rx="2" />
+      <path d="M2.8 9h18.4M12 9v11.5M12 9c-1.6-3.9-6.4-4.4-6.4-1.6C5.6 9 12 9 12 9zM12 9c1.6-3.9 6.4-4.4 6.4-1.6C18.4 9 12 9 12 9z" />
+    </>
+  ),
+  download: (
+    <>
+      <path d="M12 3.5v11.5M7 10.5l5 5 5-5" />
+      <path d="M4.5 19.5h15" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="8.5" y="8.5" width="12" height="12" rx="2.2" />
+      <path d="M15.5 8.5V5.7a2.2 2.2 0 0 0-2.2-2.2H5.7a2.2 2.2 0 0 0-2.2 2.2v7.6a2.2 2.2 0 0 0 2.2 2.2h2.8" />
+    </>
+  ),
+  edit: (
+    <>
+      <path d="M4 20h4L19.3 8.7a2.8 2.8 0 0 0-4-4L4 16v4z" />
+      <path d="M13.5 6.5l4 4" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M3.5 11L12 4l8.5 7" />
+      <path d="M6 9.5V20h12V9.5" />
+    </>
+  ),
+  locate: (
+    <>
+      <circle cx="12" cy="12" r="6.5" />
+      <circle cx="12" cy="12" r="2" />
+      <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
+    </>
+  ),
+  box: (
+    <>
+      <path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z" />
+      <path d="M3.5 7.5L12 12l8.5-4.5M12 12v9" />
+    </>
+  ),
+  prev: <path d="M15 5l-7 7 7 7" />,
+  next: <path d="M9 5l7 7-7 7" />,
 };
 
 export function Icon({ name, size = 20, label }: { name: Name; size?: number; label?: string }) {

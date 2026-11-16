@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { Dialog } from "./Dialog";
 import { Icon } from "./Icon";
 import { api } from "../lib/api";
 import type { DataMode } from "../lib/config";
@@ -9,32 +10,13 @@ import { METHODOLOGY, type Methodology } from "../demo/demo";
 export function MethodologySheet({ mode, onClose }: { mode: DataMode; onClose: () => void }) {
   const [data, setData] = useState<Methodology | null>(mode === "demo" ? METHODOLOGY : null);
   const [error, setError] = useState<string | null>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   useEffect(() => {
     if (mode !== "live") return;
     api.methodology().then(setData).catch((e) => setError(e?.message ?? "Could not load the methodology."));
   }, [mode]);
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="m-h" onClick={(e) => e.stopPropagation()}>
-        <header className="sheet__head">
-          <h2 id="m-h">
-            <Icon name="leaf" /> How we calculate the climate impact
-          </h2>
-          <button ref={closeRef} className="need__rm" aria-label="Close" onClick={onClose}>
-            <Icon name="x" />
-          </button>
-        </header>
-
+    <Dialog title="How we calculate the climate impact" eyebrow="Methodology" onClose={onClose} wide>
         {error && <p className="err">{error}</p>}
         {!data && !error && <p className="is-muted">Loading…</p>}
         {data && (
@@ -112,7 +94,6 @@ export function MethodologySheet({ mode, onClose }: { mode: DataMode; onClose: (
             </ul>
           </div>
         )}
-      </section>
-    </div>
+    </Dialog>
   );
 }
