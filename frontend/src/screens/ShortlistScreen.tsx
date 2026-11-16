@@ -100,6 +100,23 @@ export function ShortlistScreen({ stored, saved, autoCheck, onBack, onFindMore, 
         : "Your shortlist is ready. Contacting suppliers isn’t part of this prototype; nothing is reserved.");
   const needsMore = !p.shortlist.length || gaps.length > 0 || problems.length > 0;
   const starter = progress?.rewards.find((r) => r.id === "reuse_starter");
+  const [copied, setCopied] = useState(false);
+  async function copySummary() {
+    const lines = [
+      `Equipment request: ${p.brief.needs.map((n) => `${n.quantity} ${n.label}`).join(", ")}`,
+      `Dates: ${day(p.brief.start_date + "T12:00:00")} – ${day(p.brief.end_date + "T12:00:00")} · Area: ${loc?.name ?? ""}`,
+      "Shortlisted options (to confirm availability, price, delivery and deposit with each supplier):",
+      ...p.shortlist.map((e) => `- ${e.quantity} × ${e.snapshot.name} — ${e.snapshot.supplier_name}`),
+      "Prepared with ReLoop (prototype). Nothing has been reserved.",
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(lines);
+    } catch {
+      window.prompt("Copy this summary:", lines);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  }
 
   return (
     <main className="view view--project">
@@ -166,9 +183,19 @@ export function ShortlistScreen({ stored, saved, autoCheck, onBack, onFindMore, 
                 </li>
               ))}
             </ul>
-            <button className={`btn btn--block ${needsMore ? "btn--primary" : "btn--ghost"}`} onClick={onFindMore}>
-              <Icon name="search" size={18} /> {needsMore ? "Find more options" : "Browse options again"}
-            </button>
+            {needsMore ? (
+              <button className="btn btn--block btn--primary" onClick={onFindMore}>
+                <Icon name="search" size={18} /> Find more options
+              </button>
+            ) : (
+              <>
+                <button className="btn btn--block btn--primary" onClick={copySummary}>
+                  <Icon name={copied ? "check" : "copy"} size={18} /> {copied ? "Summary copied" : "Copy summary for suppliers"}
+                </button>
+                <p className="fine">Paste it into your own message to each supplier. ReLoop doesn’t contact anyone or reserve anything.</p>
+                <button className="btn btn--block btn--ghost btn--small" onClick={onFindMore}>Browse options again</button>
+              </>
+            )}
           </section>
 
           <section className="card" aria-labelledby="pr-h">
