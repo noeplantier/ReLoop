@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Icon } from "../components/Icon";
 import { Dialog } from "../components/Dialog";
 import { AreaPicker } from "../components/AreaPicker";
-import { BadgeArt } from "../components/RewardArt";
+import { BadgeShelf } from "../components/BadgeShelf";
 import { presetById } from "../lib/presets";
 import { initials, type Achievement, type Profile } from "../lib/local";
 
-export function ProfileScreen({ profile, onSave, projectCount, offerCount, achievement, badgeCount = 0, onOpenHub, onReset, canSave }: {
+export function ProfileScreen({ profile, onSave, projectCount, offerCount, achievement, badgeCount = 0, badges = {}, shortlisted = 0, onOpenHub, onReset, canSave }: {
   badgeCount?: number;
+  badges?: Record<string, string>;
+  shortlisted?: number;
   profile: Profile;
   onSave: (p: Profile) => void;
   projectCount: number;
@@ -62,21 +64,20 @@ export function ProfileScreen({ profile, onSave, projectCount, offerCount, achie
 
         <div className="stack">
           <section className="card">
-            <h2 className="h3">On this device</h2>
-            <ul className="stats">
-              <li><b>{projectCount}</b><span>saved project{projectCount === 1 ? "" : "s"}</span></li>
+            <h2 className="h3">Your contribution</h2>
+            <ul className="stats stats--4">
+              <li><b>{projectCount}</b><span>project{projectCount === 1 ? "" : "s"} saved</span></li>
+              <li><b>{shortlisted}</b><span>option{shortlisted === 1 ? "" : "s"} shortlisted</span></li>
               <li><b>{offerCount}</b><span>offer{offerCount === 1 ? "" : "s"} (not public)</span></li>
-              <li><b>{(achievement ? 1 : 0) + badgeCount}</b><span>digital badges</span></li>
+              <li><b>{(achievement ? 1 : 0) + badgeCount}</b><span>badge{(achievement ? 1 : 0) + badgeCount === 1 ? "" : "s"}</span></li>
             </ul>
+            <p className="fine">Counted in this browser only. ReLoop has no public leaderboard and doesn’t rank people; nothing here is a verified exchange.</p>
             {profile.area && <p className="fine">Preferred area: {presetById(profile.area)?.name}</p>}
             <button className="btn btn--ghost btn--block" onClick={onOpenHub}>Open My ReLoop <Icon name="arrow" size={18} /></button>
           </section>
-          <section className="card reward-mini">
-            <BadgeArt unlocked={!!achievement} size={56} />
-            <div>
-              <p className="h3">Reuse Starter</p>
-              <p className="fine">{achievement ? "Unlocked · digital badge" : "Locked · confirm a request or save an offer"}</p>
-            </div>
+          <section className="card">
+            <h2 className="h3">Badges</h2>
+            <BadgeShelf achievement={achievement} badges={badges} profileName={profile.name} />
           </section>
           <button className="btn btn--small btn--ghost danger" onClick={() => setResetOpen(true)}><Icon name="trash" size={16} /> Reset this device</button>
         </div>

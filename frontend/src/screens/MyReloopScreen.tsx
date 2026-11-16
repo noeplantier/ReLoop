@@ -9,7 +9,8 @@ import { presetById } from "../lib/presets";
 import { offerSummary, type Achievement, type StoredOffer } from "../lib/local";
 import { downloadCard } from "../lib/card";
 import { progressData, useProgress } from "../lib/useProgress";
-import { BADGES } from "../lib/badges";
+import { BadgeShelf } from "../components/BadgeShelf";
+import { logoUrl } from "../components/Brand";
 
 interface Props {
   current: StoredProject | null;
@@ -72,7 +73,35 @@ export function MyReloopScreen(p: Props) {
   return (
     <main className="view view--hub">
       <div className="view__head">
-        <h1 className="h1">My ReLoop</h1>
+        <section className="hub-hero card aura" aria-labelledby="hub-h">
+          <span className="ring" aria-hidden="true">
+            <svg viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--line-strong)" strokeWidth="5" />
+              <circle className="ring__bar" cx="40" cy="40" r="34" fill="none" stroke="var(--brand)" strokeWidth="5" strokeLinecap="round"
+                strokeDasharray={`${Math.round(213.6 * (progress ? progress.points.earned / Math.max(progress.points.possible, 1) : 0))} 214`}
+                transform="rotate(-90 40 40)" />
+              <image href={logoUrl} x="26" y="25" width="28" height="29" />
+            </svg>
+          </span>
+          <div className="hub-hero__text">
+            <p className="eyebrow">My ReLoop</p>
+            <h1 id="hub-h" className="h1">{p.profileName.trim() ? `Welcome back, ${p.profileName.trim().split(/\s+/)[0]}` : "Welcome to your ReLoop"}</h1>
+            <p className="fine">{progress
+              ? `${progress.milestones.filter((m) => m.status === "complete").length} of ${progress.milestones.length} reuse steps · ${progress.points.earned}/${progress.points.possible} pts (server-evaluated)`
+              : p.current ? (prog.state === "unavailable" ? prog.reason : "Checking your progress…") : "Keep useful equipment in circulation: find it or share it."}</p>
+            {nextMs && <p className="hub-hero__next"><span className="eyebrow">Next</span> {nextMs.title} <b>+{nextMs.points}</b></p>}
+          </div>
+          <div className="hub-hero__actions">
+            {p.current
+              ? <button className="btn btn--primary" onClick={() => p.onOpenProject(p.current!.project.id)}>Return to my project <Icon name="arrow" size={18} /></button>
+              : <button className="btn btn--primary" onClick={p.onNewRequest}><Icon name="search" size={18} /> Find equipment</button>}
+            {nextMs && (nextMs.id === "offer_saved" || (nextMs.id === "brief_reviewed" && p.current)) && (
+              <button className="btn btn--soft btn--small" onClick={nextMs.id === "offer_saved" ? p.onNewOffer : p.onNewRequest}>
+                {nextMs.id === "offer_saved" ? "Offer equipment" : "Find equipment"}
+              </button>
+            )}
+          </div>
+        </section>
         <div className="seg2" role="tablist" aria-label="My ReLoop sections">
           <button type="button" role="tab" aria-selected={area === "project"} className={area === "project" ? "is-on" : ""} onClick={() => setArea("project")}>
             <Icon name="box" size={16} /> Project & equipment
@@ -93,9 +122,7 @@ export function MyReloopScreen(p: Props) {
               <p className="h3">{p.current.project.name}</p>
               <p className="fine">{p.current.project.shortlist.length} shortlisted · {presetById(p.current.project.brief.location.preset_id)?.name}
                 {p.current.project.mode === "demo" ? " · demo" : ""}</p>
-              <button className="btn btn--primary btn--block" onClick={() => p.onOpenProject(p.current!.project.id)}>
-                Open shortlist <Icon name="arrow" size={18} />
-              </button>
+
             </div>
           ) : (
             <div className="card">
@@ -166,20 +193,9 @@ export function MyReloopScreen(p: Props) {
           <div className="card">
             <div className="card__row">
               <h3 className="h3">Badges</h3>
-              <span className="count">{Object.keys(p.badges).length + (unlocked ? 1 : 0)}/{BADGES.length + 1}</span>
+              <span className="count">{Object.keys(p.badges).length + (unlocked ? 1 : 0)} earned</span>
             </div>
-            <ul className="badge-grid">
-              {BADGES.map((b) => {
-                const on = !!p.badges[b.id];
-                return (
-                  <li key={b.id} className={on ? "is-on" : ""} title={b.rule}>
-                    <span className="badge-grid__icon"><Icon name={on ? "check" : "sparkle"} size={16} /></span>
-                    <span className="badge-grid__title">{b.title}</span>
-                    <span className="badge-grid__rule">{on ? "Unlocked" : b.rule}</span>
-                  </li>
-                );
-              })}
-            </ul>
+            <BadgeShelf achievement={p.achievement} badges={p.badges} profileName={p.profileName} />
           </div>
 
           <div className="card">
@@ -192,17 +208,7 @@ export function MyReloopScreen(p: Props) {
             {p.current && prog.state === "unavailable" && <p className="fine">{prog.reason}</p>}
             {progress && (
               <>
-                {nextMs && (
-                  <div className="next-ms">
-                    <p><span className="eyebrow">Next</span> {nextMs.title} <b>+{nextMs.points}</b><br /><span className="fine">{nextMs.eligibility}</span></p>
-                    <button className="btn btn--soft btn--small" onClick={() =>
-                      nextMs.id === "offer_saved" ? p.onNewOffer()
-                        : nextMs.id === "brief_reviewed" ? p.onNewRequest()
-                          : p.onOpenProject(p.current!.project.id)}>
-                      {nextMs.id === "offer_saved" ? "Offer equipment" : nextMs.id === "brief_reviewed" ? "Find equipment" : "Open shortlist"} <Icon name="arrow" size={16} />
-                    </button>
-                  </div>
-                )}
+
                 <ul className="ms2">
                   {progress.milestones.map((m) => (
                     <li key={m.id} className={m.status === "complete" ? "is-done" : ""} title={m.eligibility}>
