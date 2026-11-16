@@ -150,7 +150,10 @@ def test_local_first_uses_server_distances():
 def test_unconfirmed_brief_and_rewards_are_concepts_only():
     res = evaluate(project(brief_confirmed_at=None))
     assert status(res)["brief_reviewed"] == "incomplete" and res["next_step"]["id"] == "review_brief"
-    assert res["rewards"] and all(r["status"] == "concept" and "not redeemable" in r["note"] for r in res["rewards"])
+    concept = [r for r in res["rewards"] if r["id"] != "reuse_starter"]
+    assert concept and all(r["status"] == "concept" and "not redeemable" in r["note"] for r in concept)
+    starter = next(r for r in res["rewards"] if r["id"] == "reuse_starter")
+    assert starter["status"] == "locked" and res["participation"]["level"] == "none"
     assert "not redeemable" in res["points"]["note"]
 
 

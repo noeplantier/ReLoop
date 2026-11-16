@@ -6,6 +6,7 @@ import "./styles/app.css";
 import "./styles/pages.css";
 import "./styles/extras.css";
 import "./styles/project.css";
+import "./styles/landing.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

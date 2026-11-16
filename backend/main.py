@@ -14,12 +14,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import impact
 import match
+import offers
 import inventory
 import progress
 import ratelimit
 from inventory import load_inventory
-from models import (BatchRequest, BatchResponse, MatchRequest, MatchResponse, ProgressRequest,
-                    ShortlistCheckRequest, SummaryRequest, SummaryResponse)
+from models import (BatchRequest, BatchResponse, MatchRequest, MatchResponse, OfferValidateRequest,
+                    ProgressRequest, ShortlistCheckRequest, SummaryRequest, SummaryResponse)
 
 log = logging.getLogger("reloop.api")
 
@@ -167,6 +168,15 @@ def shortlist_check(req: ShortlistCheckRequest):
     checked = progress.check_shortlist(d["brief"], d["shortlist"], inv["items"], inv["suppliers"], FACTORS)
     return {"inventory_source": inv["source"], "note": progress.SHORTLIST_NOTE,
             "items": progress.public_items(checked)}
+
+
+@app.post("/offer/validate")
+def offer_validate(req: OfferValidateRequest):
+    """Validate and normalise an equipment offer. Stateless: nothing is stored or published."""
+    offer = offers.normalise(req.model_dump(mode="json")["offer"])
+    return {"valid": True, "visibility": offers.VISIBILITY, "offer": offer,
+            "approx_location": offers.approx_location(offer["location"]["preset_id"]),
+            "note": offers.OFFER_NOTE}
 
 
 @app.post("/progress/evaluate")

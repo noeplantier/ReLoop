@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Icon } from "../components/Icon";
+import { HeroArt } from "../components/HeroArt";
 import { MAX_TEXT_CHARS, type DataMode } from "../lib/config";
 import { DEMO_REQUEST, PRESETS } from "../lib/presets";
 import { DEMO_EXAMPLES } from "../demo/demo";
@@ -30,6 +31,7 @@ const when = (iso: string) =>
 export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit, projects, canSave, onReopen }: Props) {
   const [d, setD] = useState<RequestDraft>(draft);
   const [touched, setTouched] = useState(false);
+  const [tab, setTab] = useState<"find" | "offer">("find");
 
   const set = <K extends keyof RequestDraft>(k: K, v: RequestDraft[K]) => setD((p) => ({ ...p, [k]: v }));
   const datesInvalid = !!(d.startDate && d.endDate && d.endDate < d.startDate);
@@ -43,20 +45,160 @@ export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit
   };
 
   return (
-    <main className="request">
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="hero__loops" aria-hidden="true" />
-        <h1 id="hero-title" className="hero__title">
-          Find equipment.
-          <br />
-          <span className="hero__accent">Reuse locally.</span>
-        </h1>
-        <p className="hero__sub">Give events a lighter footprint together.</p>
-        <div className="hero__rule" aria-hidden="true">
-          <Icon name="leaf" size={22} />
-          <span />
-        </div>
+    <main className="landing">
+      <section className="hero2" aria-labelledby="hero-title">
+        <HeroArt />
+        <div className="hero2__shade" aria-hidden="true" />
+        <div className="hero2__inner">
+          <div className="hero2__text">
+            <h1 id="hero-title" className="hero__title">
+              Find equipment.
+              <br />
+              <span className="hero__accent">Reuse locally.</span>
+            </h1>
+            <p className="hero__sub">Give events a lighter footprint together.</p>
+            <div className="hero__rule" aria-hidden="true">
+              <Icon name="leaf" size={22} />
+              <span />
+            </div>
+          </div>
 
+          <div className="card-light card-light--hero">
+            <div className="tabs" role="tablist" aria-label="What do you want to do?">
+              <button type="button" role="tab" aria-selected={tab === "find"} className={`tab ${tab === "find" ? "is-on" : ""}`}
+                onClick={() => setTab("find")}>
+                <Icon name="search" size={18} /> Find equipment
+              </button>
+              <button type="button" role="tab" aria-selected={tab === "offer"} className={`tab ${tab === "offer" ? "is-on" : ""}`}
+                onClick={() => setTab("offer")}>
+                <Icon name="plus" size={18} /> Offer equipment
+              </button>
+            </div>
+
+            {tab === "find" ? (
+              <form className="card-form" onSubmit={submit} noValidate>
+          <div className="field">
+            <label className="field__label" htmlFor="need">
+              <Icon name="chair" /> What do you need?
+            </label>
+            <textarea
+              id="need"
+              className="input input--area"
+              rows={3}
+              maxLength={MAX_TEXT_CHARS}
+              placeholder="e.g. 50 chairs and 2 stage lights near Lara, Antalya"
+              value={d.text}
+              onChange={(e) => set("text", e.target.value)}
+              aria-invalid={touched && empty}
+              aria-describedby="need-hint"
+            />
+            <div id="need-hint" className="field__hint">
+              {touched && empty && <span className="field__error">Describe what you need, in your own words.</span>}
+              <div className="examples">
+                <button type="button" className="chip" onClick={() => setD({ ...DEMO_REQUEST })}>
+                  <Icon name="sparkle" size={16} /> Try the Antalya demo request
+                </button>
+                <details className="examples__more">
+                  <summary>More examples</summary>
+                  <ul>
+                    {DEMO_EXAMPLES.filter((x) => x.id !== "main").map((x) => (
+                      <li key={x.id}>
+                        <button type="button" className="example" onClick={(e) => {
+                          setD({ text: x.text, startDate: x.startDate, endDate: x.endDate, location: x.location });
+                          (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
+                        }}>
+                          {x.title}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+            </div>
+          </div>
+
+          <fieldset className="field">
+            <legend className="field__label">
+              <Icon name="calendar" /> Event dates
+            </legend>
+            <div className="dates">
+              <label className="date">
+                <span className="date__cap">From</span>
+                <input
+                  type="date"
+                  className="input"
+                  value={d.startDate}
+                  onChange={(e) => set("startDate", e.target.value)}
+                />
+              </label>
+              <label className="date">
+                <span className="date__cap">To</span>
+                <input
+                  type="date"
+                  className="input"
+                  value={d.endDate}
+                  min={d.startDate || undefined}
+                  onChange={(e) => set("endDate", e.target.value)}
+                  aria-invalid={datesInvalid}
+                />
+              </label>
+            </div>
+            {datesInvalid && <p className="field__error">The end date is before the start date.</p>}
+          </fieldset>
+
+          <div className="field">
+            <label className="field__label" htmlFor="loc">
+              <Icon name="pin" /> Location
+            </label>
+            <div className="select">
+              <select id="loc" className="input" value={d.location} onChange={(e) => set("location", e.target.value)}>
+                <option value="">Choose a demo location…</option>
+                {PRESETS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <Icon name="chevron" size={18} />
+            </div>
+            <p className="field__note">Demo locations only. Distances are approximate.</p>
+          </div>
+
+          <button className="btn btn--primary" type="submit" disabled={busy} aria-busy={busy}>
+            {busy ? (
+              <>
+                <span className="spinner" aria-hidden="true" /> Reading your request…
+              </>
+            ) : (
+              <>
+                <Icon name="search" /> Find reuse options <Icon name="arrow" />
+              </>
+            )}
+          </button>
+
+                {error && (
+                  <p className="alert" role="alert">
+                    {error}
+                  </p>
+                )}
+              </form>
+            ) : (
+              <div className="card-form offer-soon">
+                <p className="field__label"><Icon name="chair" /> Have chairs, lights or a stage sitting idle?</p>
+                <p className="offer-soon__text">Soon you’ll be able to list them here so nearby events can reuse them instead of buying new.</p>
+                <p className="offer-soon__badge">
+                  <Icon name="info" size={16} /> Not available in this prototype yet: nothing is published.
+                </p>
+                <button type="button" className="btn btn--outline btn--on-light" onClick={() => setTab("find")}>
+                  <Icon name="search" size={18} /> Find equipment instead
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <div className="landing__more">
         {projects.length > 0 && (
           <div className="resume" aria-labelledby="resume-h">
             <h2 id="resume-h" className="resume__h">Continue where you left off</h2>
@@ -90,115 +232,14 @@ export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit
             </p>
           </details>
         )}
-      </section>
 
-      <form className="card-light" onSubmit={submit} noValidate>
-        <div className="field">
-          <label className="field__label" htmlFor="need">
-            <Icon name="chair" /> What do you need?
-          </label>
-          <textarea
-            id="need"
-            className="input input--area"
-            rows={3}
-            maxLength={MAX_TEXT_CHARS}
-            placeholder="e.g. 50 chairs and 2 stage lights near Lara, Antalya"
-            value={d.text}
-            onChange={(e) => set("text", e.target.value)}
-            aria-invalid={touched && empty}
-            aria-describedby="need-hint"
-          />
-          <div id="need-hint" className="field__hint">
-            {touched && empty && <span className="field__error">Describe what you need, in your own words.</span>}
-            <div className="examples">
-              <button type="button" className="chip" onClick={() => setD({ ...DEMO_REQUEST })}>
-                <Icon name="sparkle" size={16} /> Try the Antalya demo request
-              </button>
-              <details className="examples__more">
-                <summary>More examples</summary>
-                <ul>
-                  {DEMO_EXAMPLES.filter((x) => x.id !== "main").map((x) => (
-                    <li key={x.id}>
-                      <button type="button" className="example" onClick={(e) => {
-                        setD({ text: x.text, startDate: x.startDate, endDate: x.endDate, location: x.location });
-                        (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
-                      }}>
-                        {x.title}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            </div>
-          </div>
-        </div>
+        <ul className="values" aria-label="Why reuse">
+          <li><Icon name="leaf" size={30} /><span>Reduce<br />waste</span></li>
+          <li><Icon name="globe" size={30} /><span>Lower carbon<br />footprint</span></li>
+          <li><Icon name="loop" size={30} /><span>Give equipment<br />a second life</span></li>
+        </ul>
 
-        <fieldset className="field">
-          <legend className="field__label">
-            <Icon name="calendar" /> Event dates
-          </legend>
-          <div className="dates">
-            <label className="date">
-              <span className="date__cap">From</span>
-              <input
-                type="date"
-                className="input"
-                value={d.startDate}
-                onChange={(e) => set("startDate", e.target.value)}
-              />
-            </label>
-            <label className="date">
-              <span className="date__cap">To</span>
-              <input
-                type="date"
-                className="input"
-                value={d.endDate}
-                min={d.startDate || undefined}
-                onChange={(e) => set("endDate", e.target.value)}
-                aria-invalid={datesInvalid}
-              />
-            </label>
-          </div>
-          {datesInvalid && <p className="field__error">The end date is before the start date.</p>}
-        </fieldset>
-
-        <div className="field">
-          <label className="field__label" htmlFor="loc">
-            <Icon name="pin" /> Location
-          </label>
-          <div className="select">
-            <select id="loc" className="input" value={d.location} onChange={(e) => set("location", e.target.value)}>
-              <option value="">Choose a demo location…</option>
-              {PRESETS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <Icon name="chevron" size={18} />
-          </div>
-          <p className="field__note">Demo locations only. Distances are approximate.</p>
-        </div>
-
-        <button className="btn btn--primary" type="submit" disabled={busy} aria-busy={busy}>
-          {busy ? (
-            <>
-              <span className="spinner" aria-hidden="true" /> Reading your request…
-            </>
-          ) : (
-            <>
-              <Icon name="search" /> Find reuse options <Icon name="arrow" />
-            </>
-          )}
-        </button>
-
-        {error && (
-          <p className="alert" role="alert">
-            {error}
-          </p>
-        )}
-
-        <div className="mode" role="radiogroup" aria-label="Data source">
+        <div className="mode mode--dark" role="radiogroup" aria-label="Data source">
           <span className="mode__label">Data</span>
           {(["live", "demo"] as DataMode[]).map((m) => (
             <button
@@ -213,12 +254,12 @@ export function RequestScreen({ draft, mode, busy, error, onModeChange, onSubmit
             </button>
           ))}
         </div>
-      </form>
 
-      <footer className="foot">
-        <Icon name="leaf" size={18} />
-        A more circular event economy
-      </footer>
+        <footer className="foot">
+          <Icon name="leaf" size={18} />
+          A more circular event economy
+        </footer>
+      </div>
     </main>
   );
 }
