@@ -386,6 +386,7 @@ input[type="date"] { color-scheme: dark; }
 .badge-art.is-locked { filter: saturate(0.3); }
 .next-ms { padding: 10px 12px; border-radius: var(--r-md); background: var(--brand-a10); border: 1px solid var(--brand-a20); font-size: var(--fs-sm); line-height: 1.5; }
 .next-ms .eyebrow { margin-right: 6px; }
+.next-ms { display: grid; gap: 8px; justify-items: start; }
 .ms2 { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .ms2 li { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: var(--r-pill); border: 1px solid var(--line-strong); color: var(--text-3); font-size: var(--fs-xs); font-weight: 600; }
 .ms2 li.is-done { border-color: var(--brand-a35); background: var(--brand-a10); color: var(--mint); }

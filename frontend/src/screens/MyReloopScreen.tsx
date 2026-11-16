@@ -192,7 +192,17 @@ export function MyReloopScreen(p: Props) {
             {p.current && prog.state === "unavailable" && <p className="fine">{prog.reason}</p>}
             {progress && (
               <>
-                {nextMs && <p className="next-ms"><span className="eyebrow">Next</span> {nextMs.title} <b>+{nextMs.points}</b><br /><span className="fine">{nextMs.eligibility}</span></p>}
+                {nextMs && (
+                  <div className="next-ms">
+                    <p><span className="eyebrow">Next</span> {nextMs.title} <b>+{nextMs.points}</b><br /><span className="fine">{nextMs.eligibility}</span></p>
+                    <button className="btn btn--soft btn--small" onClick={() =>
+                      nextMs.id === "offer_saved" ? p.onNewOffer()
+                        : nextMs.id === "brief_reviewed" ? p.onNewRequest()
+                          : p.onOpenProject(p.current!.project.id)}>
+                      {nextMs.id === "offer_saved" ? "Offer equipment" : nextMs.id === "brief_reviewed" ? "Find equipment" : "Open shortlist"} <Icon name="arrow" size={16} />
+                    </button>
+                  </div>
+                )}
                 <ul className="ms2">
                   {progress.milestones.map((m) => (
                     <li key={m.id} className={m.status === "complete" ? "is-done" : ""} title={m.eligibility}>
