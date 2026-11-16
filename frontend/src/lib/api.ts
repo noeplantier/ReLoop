@@ -4,6 +4,7 @@ import { API_URL } from "./config";
 import type { ExplainOut, InventorySource, MatchOut, MatchRequest, MatchResponse, Need, ParseOut } from "./types";
 import type { Methodology } from "../demo/demo";
 import type { ProjectBrief, ReloopProject } from "./project";
+import type { Offer } from "./local";
 
 export class ApiError extends Error {
   constructor(message: string, readonly kind: "not_configured" | "network" | "timeout" | "http", readonly status?: number) {
@@ -37,6 +38,8 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const body = await res.json();
       if (typeof body?.error === "string") msg = body.error;
+      else if (Array.isArray(body?.detail) && typeof body.detail[0]?.msg === "string")
+        msg = String(body.detail[0].msg).replace(/^Value error, /, ""); // FastAPI 422 validation shape
     } catch {
       /* keep default message */
     }
@@ -71,7 +74,12 @@ export interface ProgressOut {
   }[];
   points: { earned: number; possible: number; note: string };
   next_step: { id: string; text: string };
-  rewards: { id: string; title: string; status: "concept" | "available" | "unavailable"; note: string }[];
+  /** progress/v1.1: participation starts with one confirmed request OR one valid saved offer. */
+  participation?: { level: "none" | "started"; completed_exchanges: number; note: string };
+  rewards: {
+    id: string; title: string; kind?: string;
+    status: "concept" | "unlocked" | "locked" | "available" | "unavailable"; note: string;
+  }[];
   estimated_opportunity: {
     kgco2e_conservative: number | null; kgco2e_upper: number | null; status: string;
     counted_items: string[]; note: string;
@@ -80,9 +88,23 @@ export interface ProgressOut {
   inventory_source?: InventorySource;
 }
 
+export interface OfferValidateOut {
+  valid: boolean;
+  visibility: "this_browser";
+  offer: Offer;
+  approx_location: { lat: number; lon: number; precision_km: number; label: string };
+  note: string;
+}
+
 export const api = {
-  progress: (project: ReloopProject) =>
-    call<ProgressOut>("/progress/evaluate", { method: "POST", body: JSON.stringify({ project }) }),
+  /** POST /offer/validate: stateless check and normalisation. Stores and publishes nothing. */
+  offerValidate: (offer: Offer) =>
+    call<OfferValidateOut>("/offer/validate", { method: "POST", body: JSON.stringify({ offer }) }),
+  /** Offers checked by the server travel with the project (contract field `offers`), so `offer_saved` is derived too. */
+  progress: (project: ReloopProject, offers: Offer[] = []) =>
+    call<ProgressOut>("/progress/evaluate", {
+      method: "POST", body: JSON.stringify({ project: offers.length ? { ...project, offers: offers.slice(0, 20) } : project }),
+    }),
   /** Read-only re-check of a saved shortlist (POST /shortlist/check). Never reserves anything. */
   shortlistCheck: (brief: ProjectBrief, shortlist: { need_category: string; item_id: string; quantity: number }[]) =>
     call<ShortlistCheckOut>("/shortlist/check", { method: "POST", body: JSON.stringify({ brief, shortlist }) }),
